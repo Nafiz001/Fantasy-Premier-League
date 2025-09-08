@@ -1,0 +1,3 @@
+@echo off
+echo Starting Fantasy Premier League website...
+php artisan serve
