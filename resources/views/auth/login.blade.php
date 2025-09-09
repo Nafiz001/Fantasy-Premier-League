@@ -47,17 +47,20 @@
             </p>
         </div>
         
-        <form class="mt-8 space-y-6" action="#" method="POST">
+        <form class="mt-8 space-y-6" action="/login" method="POST">
+            @csrf
             <div class="space-y-4">
                 <div>
                     <label for="email" class="block text-sm font-medium text-gray-700">Email address</label>
-                    <input id="email" name="email" type="email" required 
+                    <input id="email" name="email" type="email" required value="manager@fpl.com"
                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-fpl-purple focus:border-fpl-purple">
+                    <p class="text-xs text-gray-500 mt-1">Demo: manager@fpl.com</p>
                 </div>
                 <div>
                     <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-                    <input id="password" name="password" type="password" required
+                    <input id="password" name="password" type="password" required value="password123"
                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-fpl-purple focus:border-fpl-purple">
+                    <p class="text-xs text-gray-500 mt-1">Demo: password123</p>
                 </div>
             </div>
 
