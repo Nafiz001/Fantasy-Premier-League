@@ -36,11 +36,9 @@
     <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4">
             <div class="flex items-center justify-between h-16">
-                <div class="flex items-center space-x-8">
-                    <div class="w-10 h-10 bg-fpl-purple rounded-full flex items-center justify-center">
-                        <span class="text-white font-bold text-sm">PL</span>
-                    </div>
-                    <span class="ml-2 text-lg font-bold text-fpl-purple">Premier League</span>
+                <div class="flex items-center space-x-3">
+                    <img src="/logo.png" alt="Premier League Logo" class="w-10 h-10 rounded-full">
+                    <span class="text-lg font-bold text-fpl-purple">Premier League</span>
                 </div>
                 <div class="flex items-center space-x-4">
                     <a href="/login" class="bg-fpl-purple text-white px-6 py-2 rounded-full hover:bg-opacity-90 font-semibold transition-all duration-200">

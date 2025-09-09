@@ -34,9 +34,7 @@
     <div class="max-w-md w-full space-y-8 p-8">
         <div>
             <div class="flex justify-center">
-                <div class="w-16 h-16 bg-fpl-purple rounded-full flex items-center justify-center">
-                    <span class="text-white font-bold text-xl">PL</span>
-                </div>
+                <img src="/logo.png" alt="Premier League Logo" class="w-16 h-16">
             </div>
             <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
                 Sign in to your account
