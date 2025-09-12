@@ -21,6 +21,19 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'has_selected_squad',
+        'team_name',
+        'budget_remaining',
+        'points',
+        'free_transfers',
+        'active_chip',
+        'used_chips',
+        'starting_xi',
+        'captain_id',
+        'vice_captain_id',
+        'formation',
+        'gameweek',
+        'squad_completed',
     ];
 
     /**
@@ -43,6 +56,9 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'used_chips' => 'array',
+            'starting_xi' => 'array',
+            'squad_completed' => 'boolean',
         ];
     }
 }

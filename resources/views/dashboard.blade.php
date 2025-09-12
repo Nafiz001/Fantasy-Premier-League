@@ -48,6 +48,7 @@
                 <!-- Full Navigation Menu -->
                 <nav class="hidden md:flex items-center space-x-8">
                     <a href="{{ route('dashboard') }}" class="text-fpl-purple hover:text-fpl-magenta font-medium transition-colors">My Team</a>
+                    <a href="{{ route('pick.team') }}" class="text-gray-700 hover:text-fpl-purple font-medium transition-colors">Pick Team</a>
                     <a href="#" class="text-gray-700 hover:text-fpl-purple font-medium transition-colors">Transfers</a>
                     <a href="{{ route('fpl.dashboard') }}" class="text-gray-700 hover:text-fpl-purple font-medium transition-colors">Statistics</a>
                     <a href="{{ route('fpl.fixtures') }}" class="text-gray-700 hover:text-fpl-purple font-medium transition-colors">Fixtures</a>
@@ -90,7 +91,7 @@
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
                 <div class="bg-white/95 backdrop-blur-sm rounded-lg p-6">
                     <div class="text-sm text-gray-600 mb-1">Total Points</div>
-                    <div class="text-2xl font-bold text-gray-900">0</div>
+                    <div class="text-2xl font-bold text-gray-900">{{ auth()->user()->points ?? 0 }}</div>
                     <div class="text-xs text-green-600">+0 this week</div>
                 </div>
                 <div class="bg-white/95 backdrop-blur-sm rounded-lg p-6">
@@ -100,12 +101,12 @@
                 </div>
                 <div class="bg-white/95 backdrop-blur-sm rounded-lg p-6">
                     <div class="text-sm text-gray-600 mb-1">Team Value</div>
-                    <div class="text-2xl font-bold text-gray-900">£100.0m</div>
-                    <div class="text-xs text-gray-500">In the bank: £{{ auth()->user()->budget_remaining ?? '0.0' }}m</div>
+                    <div class="text-2xl font-bold text-gray-900">£{{ 100 - (auth()->user()->budget_remaining ?? 0) / 10 }}m</div>
+                    <div class="text-xs text-gray-500">In the bank: £{{ (auth()->user()->budget_remaining ?? 0) / 10 }}m</div>
                 </div>
                 <div class="bg-white/95 backdrop-blur-sm rounded-lg p-6">
                     <div class="text-sm text-gray-600 mb-1">Free Transfers</div>
-                    <div class="text-2xl font-bold text-gray-900">1</div>
+                    <div class="text-2xl font-bold text-gray-900">{{ auth()->user()->free_transfers ?? 1 }}</div>
                     <div class="text-xs text-gray-500">Available this week</div>
                 </div>
             </div>
@@ -118,13 +119,51 @@
                     <div class="bg-white/95 backdrop-blur-sm rounded-lg p-6">
                         <div class="flex items-center justify-between mb-4">
                             <h3 class="font-semibold text-gray-900">Your Squad</h3>
-                            <a href="#" class="text-sm text-fpl-purple hover:text-fpl-magenta">View full team</a>
+                            <a href="{{ route('squad.view') }}" class="text-sm text-fpl-purple hover:text-fpl-magenta">View full team</a>
                         </div>
                         
-                        <div class="text-center py-8">
-                            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <span class="text-gray-400 text-2xl">⚽</span>
+                        <!-- Mini Squad Preview on Pitch -->
+                        <div class="relative w-full h-48 bg-gradient-to-b from-green-400 to-green-500 rounded-lg overflow-hidden">
+                            <!-- Mini pitch lines -->
+                            <div class="absolute inset-0">
+                                <div class="absolute inset-1 border border-white/30 rounded"></div>
+                                <div class="absolute top-1/2 left-1 right-1 h-px bg-white/30"></div>
+                                <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-8 h-8 border border-white/30 rounded-full"></div>
                             </div>
+                            
+                            <!-- Mini player positions (using full height) -->
+                            <!-- GK (TOP - 8% from top) -->
+                            <div class="absolute top-4 left-1/2 transform -translate-x-1/2">
+                                <div class="w-4 h-4 bg-blue-500 rounded-full"></div>
+                            </div>
+                            
+                            <!-- Defenders (25% from top) - Full width -->
+                            <div class="absolute top-12 left-0 right-0 flex justify-between px-8">
+                                <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                                <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                                <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                                <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                            </div>
+                            
+                            <!-- Midfielders (55% from top) - Full width -->
+                            <div class="absolute top-26 left-0 right-0 flex justify-between px-8">
+                                <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                                <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                                <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                                <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                            </div>
+                            
+                            <!-- Forwards (80% from top) - Spread apart -->
+                            <div class="absolute top-38 left-0 right-0 flex justify-center space-x-12 px-8">
+                                <div class="w-3 h-3 bg-red-500 rounded-full"></div>
+                                <div class="w-3 h-3 bg-red-500 rounded-full"></div>
+                            </div>
+                            
+                            <!-- Formation text -->
+                            <div class="absolute top-2 left-2 text-xs text-white/70 font-semibold">4-4-2</div>
+                        </div>
+                        
+                        <div class="text-center mt-4">
                             <p class="text-gray-600">Your squad is ready for the season!</p>
                             <p class="text-sm text-gray-500 mt-1">15 players selected</p>
                         </div>

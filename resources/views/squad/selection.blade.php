@@ -38,8 +38,8 @@
             background: linear-gradient(135deg, #00c851 0%, #007e33 100%);
         }
         .player-slot {
-            width: 80px;
-            height: 80px;
+            width: 90px;
+            height: 90px;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -48,15 +48,16 @@
             transition: all 0.3s ease;
         }
         .player-slot:hover {
-            transform: scale(1.1);
+            transform: scale(1.05);
         }
         .player-slot.empty {
             border: 3px dashed rgba(255,255,255,0.5);
             background: rgba(255,255,255,0.1);
         }
         .player-slot.filled {
-            background: #38003c;
+            background: rgba(56, 0, 60, 0.9);
             border: 3px solid #00ff85;
+            box-shadow: 0 4px 12px rgba(0, 255, 133, 0.3);
         }
         .position-line {
             display: flex;
@@ -438,8 +439,14 @@
                     <div class="flex items-center justify-between">
                         <div class="flex-1">
                             <div class="flex items-center space-x-2">
-                                <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-xs font-bold">
-                                    ${player.team_short || 'TM'}
+                                <div class="relative w-12 h-12 flex items-center justify-center">
+                                    <img src="https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_${player.team_id}-110.png" 
+                                         alt="${player.team_name} Jersey" 
+                                         class="w-10 h-10 object-contain"
+                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                                    <div class="w-8 h-8 bg-gray-200 rounded-full hidden items-center justify-center text-xs font-bold">
+                                        ${player.team_short || 'TM'}
+                                    </div>
                                 </div>
                                 <div>
                                     <div class="font-medium text-sm">${player.web_name}</div>
@@ -541,7 +548,18 @@
             selectedSquad.Goalkeeper.forEach((player, index) => {
                 if (gkSlots[index]) {
                     gkSlots[index].className = 'player-slot filled goalkeeper-slot';
-                    gkSlots[index].innerHTML = `<span class="text-white text-xs">${player.web_name}</span>`;
+                    gkSlots[index].innerHTML = `
+                        <div class="flex flex-col items-center">
+                            <img src="https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_${player.team_id}-110.png" 
+                                 alt="${player.web_name}" 
+                                 class="w-8 h-8 object-contain mb-1"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+                            <div class="w-6 h-6 bg-yellow-400 rounded-full hidden items-center justify-center text-xs font-bold">
+                                GK
+                            </div>
+                            <span class="text-white text-xs truncate max-w-16">${player.web_name}</span>
+                        </div>
+                    `;
                 }
             });
 
@@ -550,7 +568,18 @@
             selectedSquad.Defender.forEach((player, index) => {
                 if (defSlots[index]) {
                     defSlots[index].className = 'player-slot filled defender-slot';
-                    defSlots[index].innerHTML = `<span class="text-white text-xs">${player.web_name}</span>`;
+                    defSlots[index].innerHTML = `
+                        <div class="flex flex-col items-center">
+                            <img src="https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_${player.team_id}-110.png" 
+                                 alt="${player.web_name}" 
+                                 class="w-8 h-8 object-contain mb-1"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+                            <div class="w-6 h-6 bg-blue-400 rounded-full hidden items-center justify-center text-xs font-bold">
+                                DEF
+                            </div>
+                            <span class="text-white text-xs truncate max-w-16">${player.web_name}</span>
+                        </div>
+                    `;
                 }
             });
 
@@ -559,7 +588,18 @@
             selectedSquad.Midfielder.forEach((player, index) => {
                 if (midSlots[index]) {
                     midSlots[index].className = 'player-slot filled midfielder-slot';
-                    midSlots[index].innerHTML = `<span class="text-white text-xs">${player.web_name}</span>`;
+                    midSlots[index].innerHTML = `
+                        <div class="flex flex-col items-center">
+                            <img src="https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_${player.team_id}-110.png" 
+                                 alt="${player.web_name}" 
+                                 class="w-8 h-8 object-contain mb-1"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+                            <div class="w-6 h-6 bg-green-400 rounded-full hidden items-center justify-center text-xs font-bold">
+                                MID
+                            </div>
+                            <span class="text-white text-xs truncate max-w-16">${player.web_name}</span>
+                        </div>
+                    `;
                 }
             });
 
@@ -568,7 +608,18 @@
             selectedSquad.Forward.forEach((player, index) => {
                 if (fwdSlots[index]) {
                     fwdSlots[index].className = 'player-slot filled forward-slot';
-                    fwdSlots[index].innerHTML = `<span class="text-white text-xs">${player.web_name}</span>`;
+                    fwdSlots[index].innerHTML = `
+                        <div class="flex flex-col items-center">
+                            <img src="https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_${player.team_id}-110.png" 
+                                 alt="${player.web_name}" 
+                                 class="w-8 h-8 object-contain mb-1"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+                            <div class="w-6 h-6 bg-red-400 rounded-full hidden items-center justify-center text-xs font-bold">
+                                FWD
+                            </div>
+                            <span class="text-white text-xs truncate max-w-16">${player.web_name}</span>
+                        </div>
+                    `;
                 }
             });
         }
