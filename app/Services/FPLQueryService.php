@@ -795,7 +795,7 @@ class FPLQueryService
                 name,
                 short_name,
                 COUNT(fixture_id) as fixtures_count,
-                STRING_AGG(CONCAT(opponent, '(', venue, ')'), ', ') as fixtures_list,
+                GROUP_CONCAT(CONCAT(opponent, '(', venue, ')') SEPARATOR ', ') as fixtures_list,
                 ROUND(AVG(opponent_strength), 2) as avg_opponent_strength,
                 ROUND(AVG(difficulty_rating), 2) as avg_difficulty_rating,
                 SUM(CASE WHEN difficulty_rating = 2 THEN 1 ELSE 0 END) as easy_fixtures,

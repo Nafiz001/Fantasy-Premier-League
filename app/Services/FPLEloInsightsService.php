@@ -335,7 +335,7 @@ class FPLEloInsightsService
                     'news_added' => !empty($data['news_added']) ? date('Y-m-d H:i:s', strtotime($data['news_added'])) : null,
                     'chance_of_playing_next_round' => $getInteger($data['chance_of_playing_next_round']),
                     'chance_of_playing_this_round' => $getInteger($data['chance_of_playing_this_round']),
-                    'now_cost' => $getInteger($data['now_cost']),
+                    'now_cost' => $getNumeric($data['now_cost']) * 10, // Convert £4.5m to 45 (FPL format)
                     'now_cost_rank' => $getInteger($data['now_cost_rank']),
                     'now_cost_rank_type' => $getInteger($data['now_cost_rank_type']),
                     'cost_change_event' => $getInteger($data['cost_change_event']),
