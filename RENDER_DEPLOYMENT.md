@@ -28,7 +28,7 @@ git push origin main
 ### Step 3: Create Web Service
 1. Click **"New +"** → **"Web Service"**
 2. Connect your GitHub repository: **`Fantasy-Premier-League`**
-3. Render will detect it's a PHP app automatically
+3. Render will detect it's a Docker app automatically
 
 ### Step 4: Configure Service
 Fill in these details:
@@ -37,9 +37,9 @@ Fill in these details:
 Name: fantasy-premier-league
 Region: Oregon (US West)
 Branch: main
-Runtime: PHP
-Build Command: composer install --no-dev --optimize-autoloader && npm install && npm run build && php artisan config:clear
-Start Command: php artisan migrate --force && php artisan config:cache && php artisan serve --host=0.0.0.0 --port=$PORT
+Language: Docker
+Build Command: (leave empty - Docker handles it)
+Start Command: (leave empty - Dockerfile CMD handles it)
 Plan: Free
 ```
 

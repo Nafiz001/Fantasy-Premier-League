@@ -140,6 +140,7 @@ A fully functional Fantasy Premier League clone built with Laravel 12 and Tailwi
 ## 📖 Documentation
 
 - **[RENDER_DEPLOYMENT.md](RENDER_DEPLOYMENT.md)** - Complete FREE deployment guide for Render.com
+- **[DOCKER_GUIDE.md](DOCKER_GUIDE.md)** - Docker setup for local development and deployment
 
 ---
 

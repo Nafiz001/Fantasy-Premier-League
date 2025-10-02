@@ -29,8 +29,10 @@ echo Next Steps:
 echo 1. Go to https://render.com
 echo 2. Sign up for FREE (no credit card!)
 echo 3. Create Web Service from your GitHub repo
-echo 4. Add FREE PostgreSQL database
-echo 5. Deploy!
+echo 4. Select "Docker" as Language
+echo 5. Add FREE PostgreSQL database
+echo 6. Set environment variables (see RENDER_DEPLOYMENT.md)
+echo 7. Deploy!
 echo.
 echo See RENDER_DEPLOYMENT.md for full guide
 echo ========================================

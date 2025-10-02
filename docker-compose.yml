@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:80"
+    environment:
+      - APP_NAME=Fantasy Premier League
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - APP_KEY=base64:yJsG5pOnOACb/pJxD6O9rq8F0mDPzRs/YHoDIIw4+Yo=
+      - DB_CONNECTION=pgsql
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_DATABASE=fpl
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=password
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      - db
+    networks:
+      - fpl-network
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=fpl
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - fpl-network
+
+volumes:
+  postgres_data:
+
+networks:
+  fpl-network:
+    driver: bridge
