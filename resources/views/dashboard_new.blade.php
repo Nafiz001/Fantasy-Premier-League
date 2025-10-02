@@ -50,7 +50,7 @@
                     <a href="{{ route('dashboard') }}" class="text-fpl-purple hover:text-fpl-magenta font-medium transition-colors">My Team</a>
                     <a href="#" class="text-gray-700 hover:text-fpl-purple font-medium transition-colors">Transfers</a>
                     <a href="{{ route('fpl.dashboard') }}" class="text-gray-700 hover:text-fpl-purple font-medium transition-colors">Statistics</a>
-                    <a href="{{ route('fpl.fixtures') }}" class="text-gray-700 hover:text-fpl-purple font-medium transition-colors">Fixtures</a>
+                    <a href="{{ route('fixtures') }}" class="text-gray-700 hover:text-fpl-purple font-medium transition-colors">Fixtures</a>
                     <a href="#" class="text-gray-700 hover:text-fpl-purple font-medium transition-colors">Leagues</a>
                     <a href="#" class="text-gray-700 hover:text-fpl-purple font-medium transition-colors">More</a>
                 </nav>

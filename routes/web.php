@@ -6,6 +6,9 @@ use App\Http\Controllers\FPLAnalysisController;
 use App\Http\Controllers\FPLDataController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\SquadController;
+use App\Http\Controllers\FixturesController;
+use App\Http\Controllers\PointsController;
+use App\Http\Controllers\LeagueController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -22,17 +25,46 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::middleware(['auth'])->group(function () {
     Route::get('/squad/selection', [SquadController::class, 'showSelection'])->name('squad.selection');
     Route::post('/squad/save', [SquadController::class, 'saveSquad'])->name('squad.save');
+    Route::post('/squad/auto-pick', [SquadController::class, 'autoPickSquad'])->name('squad.auto-pick');
 });
 
 // Protected Routes (require completed squad selection)
 Route::middleware(['auth', \App\Http\Middleware\CheckSquadSelection::class])->group(function () {
-    
+
     Route::get('/dashboard', [SquadController::class, 'dashboard'])->name('dashboard');
-    
+
     // Squad management routes
     Route::get('/squad/view', [SquadController::class, 'viewSquad'])->name('squad.view');
     Route::get('/pick-team', [SquadController::class, 'pickTeam'])->name('pick.team');
     Route::post('/pick-team/save', [SquadController::class, 'saveTeamSelection'])->name('pick.team.save');
+
+    // Transfers routes
+    Route::get('/transfers', [SquadController::class, 'showTransfers'])->name('transfers');
+    Route::post('/transfers/make', [SquadController::class, 'makeTransfers'])->name('transfers.make');
+    Route::post('/transfers/reset', [SquadController::class, 'resetTransfers'])->name('transfers.reset');
+
+    // Fixtures routes
+    Route::get('/fixtures/{gameweek?}', [App\Http\Controllers\FixturesController::class, 'index'])->name('fixtures')->where('gameweek', '[0-9]+');
+    Route::post('/fixtures/import', [App\Http\Controllers\FixturesController::class, 'importFixtures'])->name('fixtures.import');
+
+    // Points routes
+    Route::get('/points/{gameweek?}', [PointsController::class, 'index'])->name('points')->where('gameweek', '[0-9]+');
+    Route::get('/api/points/data', [PointsController::class, 'getPointsData'])->name('points.data');
+    Route::get('/api/points/gameweek/{gameweekId}', [PointsController::class, 'getGameweekPoints'])->name('points.gameweek');
+
+    // Leagues routes
+    Route::prefix('leagues')->name('leagues.')->group(function () {
+        Route::get('/', [LeagueController::class, 'index'])->name('index');
+        Route::get('/create', [LeagueController::class, 'create'])->name('create');
+        Route::post('/create', [LeagueController::class, 'store'])->name('store');
+        Route::get('/join', [LeagueController::class, 'join'])->name('join');
+        Route::post('/join', [LeagueController::class, 'joinWithCode'])->name('join-code');
+        Route::get('/{league}', [LeagueController::class, 'show'])->name('show');
+        Route::delete('/{league}/leave', [LeagueController::class, 'leave'])->name('leave');
+        Route::delete('/{league}', [LeagueController::class, 'destroy'])->name('destroy');
+        Route::get('/{league}/settings', [LeagueController::class, 'settings'])->name('settings');
+        Route::put('/{league}/settings', [LeagueController::class, 'updateSettings'])->name('update-settings');
+    });
 
     // FPL Data Management Routes
     Route::prefix('fpl/data')->name('fpl.data.')->group(function () {
@@ -74,7 +106,7 @@ Route::get('/debug/teams', function () {
         ->select('fpl_code', 'name', 'short_name')
         ->orderBy('fpl_code')
         ->get();
-    
+
     return response()->json($teams);
 });
 
@@ -84,6 +116,6 @@ Route::get('/debug/players', function () {
         ->select('players.web_name', 'players.position', 'teams.name as team_name', 'teams.fpl_code')
         ->limit(20)
         ->get();
-    
+
     return response()->json($players);
 });

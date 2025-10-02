@@ -19,5 +19,10 @@ class DatabaseSeeder extends Seeder
             'name' => 'Test User',
             'email' => 'test@example.com',
         ]);
+
+        // Seed FPL data from GitHub
+        $this->call([
+            FPLDataSeeder::class,
+        ]);
     }
 }

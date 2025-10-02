@@ -5,12 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Pick Team - Fantasy Premier League</title>
-    
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -27,42 +27,42 @@
         }
     </script>
     <style>
-        body { 
-            font-family: 'Inter', sans-serif; 
+        body {
+            font-family: 'Inter', sans-serif;
             background: linear-gradient(135deg, #38003c 0%, #e90052 50%, #00ff85 100%);
             min-height: 100vh;
         }
-        
+
         .player-card {
             transition: all 0.3s ease;
             cursor: pointer;
         }
-        
+
         .player-card:hover {
             transform: scale(1.02);
         }
-        
+
         .player-card.selected {
             ring: 2px solid #00ff85;
         }
-        
+
         .player-card.captain {
             border: 3px solid #fbbf24;
         }
-        
+
         .player-card.vice-captain {
             border: 3px solid #6b7280;
         }
-        
+
         .pitch-slot {
             min-height: 100px;
             transition: all 0.3s ease;
         }
-        
+
         .pitch-slot.occupied {
             background: rgba(255, 255, 255, 0.9);
         }
-        
+
         .pitch-slot.droppable {
             background: rgba(0, 255, 133, 0.3);
             border: 2px dashed #00ff85;
@@ -71,39 +71,7 @@
 </head>
 <body>
     <!-- Navigation Header -->
-    <header class="bg-white/95 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4">
-            <div class="flex items-center justify-between h-16">
-                <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 bg-fpl-purple rounded-full flex items-center justify-center">
-                        <span class="text-white font-bold text-lg">F</span>
-                    </div>
-                    <span class="text-lg font-bold text-fpl-purple">Fantasy</span>
-                </div>
-                
-                <nav class="hidden md:flex items-center space-x-8">
-                    <a href="{{ route('dashboard') }}" class="text-gray-700 hover:text-fpl-purple font-medium transition-colors">My Team</a>
-                    <a href="{{ route('pick.team') }}" class="text-fpl-purple font-medium">Pick Team</a>
-                    <a href="#" class="text-gray-700 hover:text-fpl-purple font-medium transition-colors">Transfers</a>
-                    <a href="{{ route('fpl.dashboard') }}" class="text-gray-700 hover:text-fpl-purple font-medium transition-colors">Statistics</a>
-                    <a href="{{ route('fpl.fixtures') }}" class="text-gray-700 hover:text-fpl-purple font-medium transition-colors">Fixtures</a>
-                    <a href="#" class="text-gray-700 hover:text-fpl-purple font-medium transition-colors">Leagues</a>
-                    <a href="#" class="text-gray-700 hover:text-fpl-purple font-medium transition-colors">More</a>
-                </nav>
-
-                <div class="flex items-center space-x-4">
-                    <div class="text-right hidden sm:block">
-                        <div class="text-sm font-semibold text-gray-900">{{ $user->team_name ?? 'My Team' }}</div>
-                        <div class="text-xs text-gray-500">{{ $user->name }}</div>
-                    </div>
-                    <form method="POST" action="{{ route('logout') }}" class="inline">
-                        @csrf
-                        <button type="submit" class="text-sm text-gray-500 hover:text-red-600">Logout</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </header>
+    @include('partials.navigation')
 
     <!-- Main Content -->
     <div class="min-h-screen">
@@ -152,7 +120,7 @@
 
                             <!-- Player Positions (Initially Empty) -->
                             <!-- Goalkeeper Slot -->
-                            <div class="absolute top-12 left-1/2 transform -translate-x-1/2 pitch-slot" 
+                            <div class="absolute top-12 left-1/2 transform -translate-x-1/2 pitch-slot"
                                  data-position="GK" id="gk-slot">
                                 <div class="w-20 h-20 border-2 border-dashed border-white/50 rounded-lg flex items-center justify-center">
                                     <span class="text-white/50 text-xs">GK</span>
@@ -271,15 +239,15 @@
                     <!-- Squad List -->
                     <div class="bg-white/95 backdrop-blur-sm rounded-lg p-4">
                         <h3 class="font-semibold text-gray-900 mb-4">Your Squad</h3>
-                        
+
                         <!-- Goalkeepers -->
                         <div class="mb-4">
                             <h4 class="text-sm font-medium text-gray-700 mb-2">Goalkeepers</h4>
                             <div class="space-y-2" id="gk-list">
                                 @foreach(($squad['goalkeepers'] ?? []) as $gk)
-                                    <div class="player-card flex items-center space-x-3 p-2 border border-gray-200 rounded-lg" 
-                                         draggable="true" 
-                                         data-player-id="{{ $gk->fpl_id }}" 
+                                    <div class="player-card flex items-center space-x-3 p-2 border border-gray-200 rounded-lg"
+                                         draggable="true"
+                                         data-player-id="{{ $gk->fpl_id }}"
                                          data-position="Goalkeeper">
                                         <img src="{{ $gk->jersey_url }}" alt="Jersey" class="w-8 h-8 rounded">
                                         <div class="flex-1">
@@ -300,9 +268,9 @@
                             <h4 class="text-sm font-medium text-gray-700 mb-2">Defenders</h4>
                             <div class="space-y-2" id="def-list">
                                 @foreach(($squad['defenders'] ?? []) as $def)
-                                    <div class="player-card flex items-center space-x-3 p-2 border border-gray-200 rounded-lg" 
-                                         draggable="true" 
-                                         data-player-id="{{ $def->fpl_id }}" 
+                                    <div class="player-card flex items-center space-x-3 p-2 border border-gray-200 rounded-lg"
+                                         draggable="true"
+                                         data-player-id="{{ $def->fpl_id }}"
                                          data-position="Defender">
                                         <img src="{{ $def->jersey_url }}" alt="Jersey" class="w-8 h-8 rounded">
                                         <div class="flex-1">
@@ -323,9 +291,9 @@
                             <h4 class="text-sm font-medium text-gray-700 mb-2">Midfielders</h4>
                             <div class="space-y-2" id="mid-list">
                                 @foreach(($squad['midfielders'] ?? []) as $mid)
-                                    <div class="player-card flex items-center space-x-3 p-2 border border-gray-200 rounded-lg" 
-                                         draggable="true" 
-                                         data-player-id="{{ $mid->fpl_id }}" 
+                                    <div class="player-card flex items-center space-x-3 p-2 border border-gray-200 rounded-lg"
+                                         draggable="true"
+                                         data-player-id="{{ $mid->fpl_id }}"
                                          data-position="Midfielder">
                                         <img src="{{ $mid->jersey_url }}" alt="Jersey" class="w-8 h-8 rounded">
                                         <div class="flex-1">
@@ -346,9 +314,9 @@
                             <h4 class="text-sm font-medium text-gray-700 mb-2">Forwards</h4>
                             <div class="space-y-2" id="fwd-list">
                                 @foreach(($squad['forwards'] ?? []) as $fwd)
-                                    <div class="player-card flex items-center space-x-3 p-2 border border-gray-200 rounded-lg" 
-                                         draggable="true" 
-                                         data-player-id="{{ $fwd->fpl_id }}" 
+                                    <div class="player-card flex items-center space-x-3 p-2 border border-gray-200 rounded-lg"
+                                         draggable="true"
+                                         data-player-id="{{ $fwd->fpl_id }}"
                                          data-position="Forward">
                                         <img src="{{ $fwd->jersey_url }}" alt="Jersey" class="w-8 h-8 rounded">
                                         <div class="flex-1">
@@ -383,22 +351,22 @@
 
         // Team data from database
         const teamData = @json($teamData);
-        
+
         // Initialize team from database
         function initializeTeamFromDatabase() {
             if (teamData.starting_xi && teamData.starting_xi.length > 0) {
                 startingXI = [...teamData.starting_xi];
-                
+
                 // Set captain and vice-captain
                 currentCaptain = teamData.captain_id;
                 currentViceCaptain = teamData.vice_captain_id;
-                
+
                 // Set active chip
                 selectedChip = teamData.active_chip;
-                
+
                 // Set formation
                 document.getElementById('formation-select').value = teamData.formation;
-                
+
                 // Update captain/vice-captain display
                 if (currentCaptain) {
                     document.getElementById('captain-name').textContent = `Player ${currentCaptain}`;
@@ -407,7 +375,7 @@
                         captainBtn.classList.add('bg-yellow-400', 'text-white');
                     }
                 }
-                
+
                 if (currentViceCaptain) {
                     document.getElementById('vice-captain-name').textContent = `Player ${currentViceCaptain}`;
                     const viceBtn = document.querySelector(`[data-player-id="${currentViceCaptain}"].vice-captain-btn`);
@@ -415,7 +383,7 @@
                         viceBtn.classList.add('bg-gray-400', 'text-white');
                     }
                 }
-                
+
                 // Set chip selection
                 if (selectedChip) {
                     const chipBtn = document.querySelector(`[data-chip="${selectedChip}"]`);
@@ -423,7 +391,7 @@
                         chipBtn.classList.add('border-fpl-green', 'bg-fpl-green/10');
                     }
                 }
-                
+
                 // Place players on pitch
                 teamData.starting_xi.forEach(playerId => {
                     const playerCard = document.querySelector(`[data-player-id="${playerId}"].player-card`);
@@ -431,7 +399,7 @@
                         const position = playerCard.dataset.position;
                         const playerName = playerCard.querySelector('.text-sm.font-medium').textContent;
                         const jerseyUrl = playerCard.querySelector('img').src;
-                        
+
                         const availableSlot = findAvailableSlot(position);
                         if (availableSlot) {
                             const playerData = {
@@ -452,7 +420,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             const playerCards = document.querySelectorAll('.player-card');
             const pitchSlots = document.querySelectorAll('.pitch-slot');
-            
+
             // Initialize team from database
             initializeTeamFromDatabase();
 
@@ -485,10 +453,10 @@
                 slot.addEventListener('drop', function(e) {
                     e.preventDefault();
                     this.classList.remove('droppable');
-                    
+
                     const data = JSON.parse(e.dataTransfer.getData('text/plain'));
                     const slotPosition = this.dataset.position;
-                    
+
                     // Check position compatibility
                     if (isPositionCompatible(data.position, slotPosition)) {
                         // Check if player is already on the pitch (only if dropping to a different slot)
@@ -503,9 +471,9 @@
                                 return;
                             }
                         }
-                        
+
                         addPlayerToPitch(this, data);
-                        
+
                         // Add visual feedback that player is selected
                         const playerCard = document.querySelector(`[data-player-id="${data.playerId}"].player-card`);
                         if (playerCard) {
@@ -526,7 +494,7 @@
                     selectViceCaptain(e.target.dataset.playerId);
                     return;
                 }
-                
+
                 // Handle player card clicks
                 const playerCard = e.target.closest('.player-card');
                 if (playerCard && !e.target.classList.contains('captain-btn') && !e.target.classList.contains('vice-captain-btn')) {
@@ -534,13 +502,13 @@
                     const position = playerCard.dataset.position;
                     const playerName = playerCard.querySelector('.text-sm.font-medium').textContent;
                     const jerseyUrl = playerCard.querySelector('img').src;
-                    
+
                     // Check if player is already on the pitch
                     if (startingXI.includes(playerId)) {
                         alert('This player is already in your starting XI');
                         return;
                     }
-                    
+
                     // Find an available slot for this position
                     const availableSlot = findAvailableSlot(position);
                     if (availableSlot) {
@@ -551,7 +519,7 @@
                             jerseyUrl: jerseyUrl
                         };
                         addPlayerToPitch(availableSlot, playerData);
-                        
+
                         // Add visual feedback that player is selected
                         playerCard.classList.add('bg-green-100', 'border-green-500');
                     } else {
@@ -567,7 +535,7 @@
                                 };
                                 // Use the first occupied slot for substitution
                                 addPlayerToPitch(occupiedSlots[0], playerData);
-                                
+
                                 // Add visual feedback that player is selected
                                 playerCard.classList.add('bg-green-100', 'border-green-500');
                             }
@@ -606,10 +574,10 @@
                 'Midfielder': 'MID',
                 'Forward': 'FWD'
             };
-            
+
             const slotPosition = posMap[position];
             const slots = document.querySelectorAll(`[data-position="${slotPosition}"]`);
-            
+
             for (let slot of slots) {
                 if (!slot.classList.contains('occupied')) {
                     return slot;
@@ -634,19 +602,19 @@
                 const existingPlayer = slot.querySelector('.player-pitch-card');
                 if (existingPlayer) {
                     const existingPlayerId = existingPlayer.dataset.playerId;
-                    
+
                     // Remove from starting XI
                     const index = startingXI.indexOf(existingPlayerId);
                     if (index > -1) {
                         startingXI.splice(index, 1);
                     }
-                    
+
                     // Remove visual feedback from previous player card
                     const previousPlayerCard = document.querySelector(`[data-player-id="${existingPlayerId}"].player-card`);
                     if (previousPlayerCard) {
                         previousPlayerCard.classList.remove('bg-green-100', 'border-green-500');
                     }
-                    
+
                     // Remove captain/vice-captain if this player was selected
                     if (currentCaptain === existingPlayerId) {
                         currentCaptain = null;
@@ -655,7 +623,7 @@
                             btn.classList.remove('bg-yellow-400', 'text-white');
                         });
                     }
-                    
+
                     if (currentViceCaptain === existingPlayerId) {
                         currentViceCaptain = null;
                         document.getElementById('vice-captain-name').textContent = 'None';
@@ -665,7 +633,7 @@
                     }
                 }
             }
-            
+
             // Create player card for pitch
             const pitchPlayer = document.createElement('div');
             pitchPlayer.className = 'player-pitch-card cursor-pointer';
@@ -678,16 +646,16 @@
                     <div class="text-xs font-semibold text-gray-900">${playerData.name || playerData.playerId}</div>
                 </div>
             `;
-            
+
             // Add click to remove functionality
             pitchPlayer.addEventListener('click', function() {
                 removePlayerFromPitch(slot, playerData.playerId);
             });
-            
+
             slot.innerHTML = '';
             slot.appendChild(pitchPlayer);
             slot.classList.add('occupied');
-            
+
             // Add to starting XI
             if (!startingXI.includes(playerData.playerId)) {
                 startingXI.push(playerData.playerId);
@@ -697,19 +665,19 @@
         function removePlayerFromPitch(slot, playerId) {
             slot.innerHTML = '';
             slot.classList.remove('occupied');
-            
+
             // Remove from starting XI
             const index = startingXI.indexOf(playerId);
             if (index > -1) {
                 startingXI.splice(index, 1);
             }
-            
+
             // Remove visual feedback from player card
             const playerCard = document.querySelector(`[data-player-id="${playerId}"].player-card`);
             if (playerCard) {
                 playerCard.classList.remove('bg-green-100', 'border-green-500');
             }
-            
+
             // Remove captain/vice-captain if this player was selected
             if (currentCaptain === playerId) {
                 currentCaptain = null;
@@ -718,7 +686,7 @@
                     btn.classList.remove('bg-yellow-400', 'text-white');
                 });
             }
-            
+
             if (currentViceCaptain === playerId) {
                 currentViceCaptain = null;
                 document.getElementById('vice-captain-name').textContent = 'None';
@@ -733,7 +701,7 @@
             document.querySelectorAll('.captain-btn').forEach(btn => {
                 btn.classList.remove('bg-yellow-400', 'text-white');
             });
-            
+
             // Add captain styling
             const captainBtn = document.querySelector(`[data-player-id="${playerId}"].captain-btn`);
             if (captainBtn) {
@@ -748,7 +716,7 @@
             document.querySelectorAll('.vice-captain-btn').forEach(btn => {
                 btn.classList.remove('bg-gray-400', 'text-white');
             });
-            
+
             // Add vice-captain styling
             const viceBtn = document.querySelector(`[data-player-id="${playerId}"].vice-captain-btn`);
             if (viceBtn) {
@@ -763,7 +731,7 @@
             document.querySelectorAll('.chip-btn').forEach(btn => {
                 btn.classList.remove('border-fpl-green', 'bg-fpl-green/10');
             });
-            
+
             // Add chip selection
             const chipBtn = document.querySelector(`[data-chip="${chipType}"]`);
             if (chipBtn) {
@@ -777,12 +745,12 @@
                 alert('Please select 11 players for your starting XI');
                 return;
             }
-            
+
             if (!currentCaptain) {
                 alert('Please select a captain');
                 return;
             }
-            
+
             if (!currentViceCaptain) {
                 alert('Please select a vice-captain');
                 return;

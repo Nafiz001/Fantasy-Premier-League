@@ -4,12 +4,12 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Fantasy Premier League - Dashboard</title>
-    
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -26,8 +26,8 @@
         }
     </script>
     <style>
-        body { 
-            font-family: 'Inter', sans-serif; 
+        body {
+            font-family: 'Inter', sans-serif;
             background: linear-gradient(135deg, #38003c 0%, #e90052 50%, #00ff85 100%);
             min-height: 100vh;
         }
@@ -35,40 +35,7 @@
 </head>
 <body>
     <!-- Full Navigation Header - Available after squad selection -->
-    <header class="bg-white/95 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4">
-            <div class="flex items-center justify-between h-16">
-                <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 bg-fpl-purple rounded-full flex items-center justify-center">
-                        <span class="text-white font-bold text-lg">F</span>
-                    </div>
-                    <span class="text-lg font-bold text-fpl-purple">Fantasy</span>
-                </div>
-                
-                <!-- Full Navigation Menu -->
-                <nav class="hidden md:flex items-center space-x-8">
-                    <a href="{{ route('dashboard') }}" class="text-fpl-purple hover:text-fpl-magenta font-medium transition-colors">My Team</a>
-                    <a href="{{ route('pick.team') }}" class="text-gray-700 hover:text-fpl-purple font-medium transition-colors">Pick Team</a>
-                    <a href="#" class="text-gray-700 hover:text-fpl-purple font-medium transition-colors">Transfers</a>
-                    <a href="{{ route('fpl.dashboard') }}" class="text-gray-700 hover:text-fpl-purple font-medium transition-colors">Statistics</a>
-                    <a href="{{ route('fpl.fixtures') }}" class="text-gray-700 hover:text-fpl-purple font-medium transition-colors">Fixtures</a>
-                    <a href="#" class="text-gray-700 hover:text-fpl-purple font-medium transition-colors">Leagues</a>
-                    <a href="#" class="text-gray-700 hover:text-fpl-purple font-medium transition-colors">More</a>
-                </nav>
-
-                <div class="flex items-center space-x-4">
-                    <div class="text-right hidden sm:block">
-                        <div class="text-sm font-semibold text-gray-900">{{ auth()->user()->team_name ?? 'My Team' }}</div>
-                        <div class="text-xs text-gray-500">{{ auth()->user()->name }}</div>
-                    </div>
-                    <form method="POST" action="{{ route('logout') }}" class="inline">
-                        @csrf
-                        <button type="submit" class="text-sm text-gray-500 hover:text-red-600">Logout</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </header>
+    @include('partials.navigation')
 
     <!-- Main Dashboard Content -->
     <div class="min-h-screen">
@@ -81,8 +48,19 @@
                         <p class="text-gray-600">Manage your Fantasy Premier League team: {{ auth()->user()->team_name }}</p>
                     </div>
                     <div class="text-right">
-                        <div class="text-lg font-bold text-gray-900">Gameweek 3</div>
-                        <div class="text-sm text-gray-600">Next deadline: Sat 14 Sep, 16:00</div>
+                        @if(isset($currentGameweek))
+                            <div class="text-lg font-bold text-gray-900">{{ $currentGameweek->name }}</div>
+                            <div class="text-sm text-gray-600">
+                                @if($currentGameweek->finished)
+                                    Finished
+                                @else
+                                    Deadline: {{ date('D j M, H:i', strtotime($currentGameweek->deadline_time)) }}
+                                @endif
+                            </div>
+                        @else
+                            <div class="text-lg font-bold text-gray-900">Gameweek 3</div>
+                            <div class="text-sm text-gray-600">Next deadline: Sat 14 Sep, 16:00</div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -90,14 +68,20 @@
             <!-- Quick Stats -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
                 <div class="bg-white/95 backdrop-blur-sm rounded-lg p-6">
-                    <div class="text-sm text-gray-600 mb-1">Total Points</div>
-                    <div class="text-2xl font-bold text-gray-900">{{ auth()->user()->points ?? 0 }}</div>
-                    <div class="text-xs text-green-600">+0 this week</div>
+                    <div class="text-sm text-gray-600 mb-1">Latest Gameweek Points</div>
+                    <div class="text-2xl font-bold text-gray-900">{{ $teamData['latest_points'] ?? 0 }}</div>
+                    <div class="text-xs text-gray-500">
+                        @if(isset($teamData['latest_gameweek']))
+                            {{ $teamData['latest_gameweek'] }}
+                        @else
+                            No gameweek finished yet
+                        @endif
+                    </div>
                 </div>
                 <div class="bg-white/95 backdrop-blur-sm rounded-lg p-6">
-                    <div class="text-sm text-gray-600 mb-1">Overall Rank</div>
-                    <div class="text-2xl font-bold text-gray-900">-</div>
-                    <div class="text-xs text-gray-500">First season</div>
+                    <div class="text-sm text-gray-600 mb-1">Total Points</div>
+                    <div class="text-2xl font-bold text-gray-900">{{ auth()->user()->points ?? 0 }}</div>
+                    <div class="text-xs text-gray-500">Season total</div>
                 </div>
                 <div class="bg-white/95 backdrop-blur-sm rounded-lg p-6">
                     <div class="text-sm text-gray-600 mb-1">Team Value</div>
@@ -121,7 +105,7 @@
                             <h3 class="font-semibold text-gray-900">Your Squad</h3>
                             <a href="{{ route('squad.view') }}" class="text-sm text-fpl-purple hover:text-fpl-magenta">View full team</a>
                         </div>
-                        
+
                         <!-- Mini Squad Preview on Pitch -->
                         <div class="relative w-full h-48 bg-gradient-to-b from-green-400 to-green-500 rounded-lg overflow-hidden">
                             <!-- Mini pitch lines -->
@@ -130,13 +114,13 @@
                                 <div class="absolute top-1/2 left-1 right-1 h-px bg-white/30"></div>
                                 <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-8 h-8 border border-white/30 rounded-full"></div>
                             </div>
-                            
+
                             <!-- Mini player positions (using full height) -->
                             <!-- GK (TOP - 8% from top) -->
                             <div class="absolute top-4 left-1/2 transform -translate-x-1/2">
                                 <div class="w-4 h-4 bg-blue-500 rounded-full"></div>
                             </div>
-                            
+
                             <!-- Defenders (25% from top) - Full width -->
                             <div class="absolute top-12 left-0 right-0 flex justify-between px-8">
                                 <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
@@ -144,7 +128,7 @@
                                 <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
                                 <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
                             </div>
-                            
+
                             <!-- Midfielders (55% from top) - Full width -->
                             <div class="absolute top-26 left-0 right-0 flex justify-between px-8">
                                 <div class="w-3 h-3 bg-green-500 rounded-full"></div>
@@ -152,17 +136,17 @@
                                 <div class="w-3 h-3 bg-green-500 rounded-full"></div>
                                 <div class="w-3 h-3 bg-green-500 rounded-full"></div>
                             </div>
-                            
+
                             <!-- Forwards (80% from top) - Spread apart -->
                             <div class="absolute top-38 left-0 right-0 flex justify-center space-x-12 px-8">
                                 <div class="w-3 h-3 bg-red-500 rounded-full"></div>
                                 <div class="w-3 h-3 bg-red-500 rounded-full"></div>
                             </div>
-                            
+
                             <!-- Formation text -->
                             <div class="absolute top-2 left-2 text-xs text-white/70 font-semibold">4-4-2</div>
                         </div>
-                        
+
                         <div class="text-center mt-4">
                             <p class="text-gray-600">Your squad is ready for the season!</p>
                             <p class="text-sm text-gray-500 mt-1">15 players selected</p>

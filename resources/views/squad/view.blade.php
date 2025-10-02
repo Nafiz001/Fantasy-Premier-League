@@ -4,12 +4,12 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ $user->team_name ?? 'My Squad' }} - Fantasy Premier League</title>
-    
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -26,26 +26,26 @@
         }
     </script>
     <style>
-        body { 
-            font-family: 'Inter', sans-serif; 
+        body {
+            font-family: 'Inter', sans-serif;
             background: linear-gradient(135deg, #38003c 0%, #e90052 50%, #00ff85 100%);
             min-height: 100vh;
         }
-        
+
         .player-card-pitch {
             position: relative;
             transition: transform 0.2s ease;
         }
-        
+
         .player-card-pitch:hover {
             transform: scale(1.05);
         }
-        
+
         .player-card-bench {
             position: relative;
             transition: transform 0.2s ease;
         }
-        
+
         .player-card-bench:hover {
             transform: scale(1.05);
         }
@@ -53,31 +53,7 @@
 </head>
 <body>
     <!-- Navigation Header -->
-    <header class="bg-white/95 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4">
-            <div class="flex items-center justify-between h-16">
-                <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 bg-fpl-purple rounded-full flex items-center justify-center">
-                        <span class="text-white font-bold text-lg">F</span>
-                    </div>
-                    <span class="text-lg font-bold text-fpl-purple">Fantasy</span>
-                </div>
-                
-                <nav class="hidden md:flex items-center space-x-8">
-                    <a href="{{ route('dashboard') }}" class="text-gray-700 hover:text-fpl-purple font-medium transition-colors">My Team</a>
-                    <a href="{{ route('pick.team') }}" class="text-gray-700 hover:text-fpl-purple font-medium transition-colors">Pick Team</a>
-                    <a href="#" class="text-gray-700 hover:text-fpl-purple font-medium transition-colors">Transfers</a>
-                    <a href="{{ route('fpl.dashboard') }}" class="text-gray-700 hover:text-fpl-purple font-medium transition-colors">Statistics</a>
-                    <a href="{{ route('fpl.fixtures') }}" class="text-gray-700 hover:text-fpl-purple font-medium transition-colors">Fixtures</a>
-                    <a href="#" class="text-gray-700 hover:text-fpl-purple font-medium transition-colors">Leagues</a>
-                    <a href="#" class="text-gray-700 hover:text-fpl-purple font-medium transition-colors">More</a>
-                </nav>
-
-                <div class="flex items-center space-x-4">
-                    <div class="text-right hidden sm:block">
-                        <div class="text-sm font-semibold text-gray-900">{{ $user->team_name ?? 'My Team' }}</div>
-                        <div class="text-xs text-gray-500">{{ $user->name }}</div>
-                    </div>
+    @include('partials.navigation')
                     <form method="POST" action="{{ route('logout') }}" class="inline">
                         @csrf
                         <button type="submit" class="text-sm text-gray-500 hover:text-red-600">Logout</button>
@@ -113,25 +89,25 @@
                         <div class="absolute inset-0">
                             <!-- Outer boundary -->
                             <div class="absolute inset-4 border-2 border-white/60 rounded"></div>
-                            
+
                             <!-- Goal Areas (top and bottom) -->
                             <div class="absolute top-4 left-1/2 transform -translate-x-1/2 w-32 h-16 border-2 border-white/60"></div>
                             <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-32 h-16 border-2 border-white/60"></div>
-                            
+
                             <!-- Penalty Areas (top and bottom) -->
                             <div class="absolute top-4 left-1/2 transform -translate-x-1/2 w-48 h-24 border-2 border-white/60"></div>
                             <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-48 h-24 border-2 border-white/60"></div>
-                            
+
                             <!-- Center Circle -->
                             <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-24 h-24 border-2 border-white/60 rounded-full"></div>
                             <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-white/60 rounded-full"></div>
-                            
+
                             <!-- Center Line -->
                             <div class="absolute top-1/2 left-4 right-4 h-0.5 bg-white/60"></div>
                         </div>
 
                         <!-- Player Cards positioned to use full pitch height -->
-                        
+
                         <!-- Goalkeeper (TOP - 8% from top) -->
                         <div class="absolute top-12 left-1/2 transform -translate-x-1/2">
                             @if(isset($squad['goalkeepers'][0]))
@@ -148,8 +124,8 @@
                                     @endif
                                     <!-- Jersey -->
                                     <div class="w-16 h-16 bg-white rounded-lg shadow-lg flex items-center justify-center mb-2">
-                                        <img src="{{ $squad['goalkeepers'][0]->jersey_url }}" 
-                                             alt="Jersey" 
+                                        <img src="{{ $squad['goalkeepers'][0]->jersey_url }}"
+                                             alt="Jersey"
                                              class="w-12 h-12 rounded">
                                     </div>
                                     <!-- Player Info -->
@@ -176,8 +152,8 @@
                                         </div>
                                     @endif
                                     <div class="w-16 h-16 bg-white rounded-lg shadow-lg flex items-center justify-center mb-2">
-                                        <img src="{{ $defender->jersey_url }}" 
-                                             alt="Jersey" 
+                                        <img src="{{ $defender->jersey_url }}"
+                                             alt="Jersey"
                                              class="w-12 h-12 rounded">
                                     </div>
                                     <div class="bg-white rounded px-2 py-1 text-center shadow-lg">
@@ -203,8 +179,8 @@
                                         </div>
                                     @endif
                                     <div class="w-16 h-16 bg-white rounded-lg shadow-lg flex items-center justify-center mb-2">
-                                        <img src="{{ $midfielder->jersey_url }}" 
-                                             alt="Jersey" 
+                                        <img src="{{ $midfielder->jersey_url }}"
+                                             alt="Jersey"
                                              class="w-12 h-12 rounded">
                                     </div>
                                     <div class="bg-white rounded px-2 py-1 text-center shadow-lg">
@@ -230,8 +206,8 @@
                                         </div>
                                     @endif
                                     <div class="w-16 h-16 bg-white rounded-lg shadow-lg flex items-center justify-center mb-2">
-                                        <img src="{{ $forward->jersey_url }}" 
-                                             alt="Jersey" 
+                                        <img src="{{ $forward->jersey_url }}"
+                                             alt="Jersey"
                                              class="w-12 h-12 rounded">
                                     </div>
                                     <div class="bg-white rounded px-2 py-1 text-center shadow-lg">
@@ -255,8 +231,8 @@
                         @if(isset($squad['goalkeepers'][1]))
                             <div class="player-card-bench">
                                 <div class="w-14 h-14 bg-white rounded-lg shadow-lg flex items-center justify-center mb-2 mx-auto">
-                                    <img src="{{ $squad['goalkeepers'][1]->jersey_url }}" 
-                                         alt="Jersey" 
+                                    <img src="{{ $squad['goalkeepers'][1]->jersey_url }}"
+                                         alt="Jersey"
                                          class="w-10 h-10 rounded">
                                 </div>
                                 <div class="bg-white rounded px-2 py-1 text-center shadow-lg">
@@ -273,8 +249,8 @@
                         @if(isset($squad['defenders'][4]))
                             <div class="player-card-bench">
                                 <div class="w-14 h-14 bg-white rounded-lg shadow-lg flex items-center justify-center mb-2 mx-auto">
-                                    <img src="{{ $squad['defenders'][4]->jersey_url }}" 
-                                         alt="Jersey" 
+                                    <img src="{{ $squad['defenders'][4]->jersey_url }}"
+                                         alt="Jersey"
                                          class="w-10 h-10 rounded">
                                 </div>
                                 <div class="bg-white rounded px-2 py-1 text-center shadow-lg">
@@ -291,8 +267,8 @@
                         @if(isset($squad['midfielders'][4]))
                             <div class="player-card-bench">
                                 <div class="w-14 h-14 bg-white rounded-lg shadow-lg flex items-center justify-center mb-2 mx-auto">
-                                    <img src="{{ $squad['midfielders'][4]->jersey_url }}" 
-                                         alt="Jersey" 
+                                    <img src="{{ $squad['midfielders'][4]->jersey_url }}"
+                                         alt="Jersey"
                                          class="w-10 h-10 rounded">
                                 </div>
                                 <div class="bg-white rounded px-2 py-1 text-center shadow-lg">
@@ -309,8 +285,8 @@
                         @if(isset($squad['forwards'][2]))
                             <div class="player-card-bench">
                                 <div class="w-14 h-14 bg-white rounded-lg shadow-lg flex items-center justify-center mb-2 mx-auto">
-                                    <img src="{{ $squad['forwards'][2]->jersey_url }}" 
-                                         alt="Jersey" 
+                                    <img src="{{ $squad['forwards'][2]->jersey_url }}"
+                                         alt="Jersey"
                                          class="w-10 h-10 rounded">
                                 </div>
                                 <div class="bg-white rounded px-2 py-1 text-center shadow-lg">
@@ -328,7 +304,7 @@
                 <a href="{{ route('dashboard') }}" class="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
                     Back to Dashboard
                 </a>
-                <a href="#" class="px-6 py-3 bg-fpl-purple text-white rounded-lg hover:bg-purple-900 transition-colors">
+                <a href="{{ route('transfers') }}" class="px-6 py-3 bg-fpl-purple text-white rounded-lg hover:bg-purple-900 transition-colors">
                     Make Transfers
                 </a>
             </div>

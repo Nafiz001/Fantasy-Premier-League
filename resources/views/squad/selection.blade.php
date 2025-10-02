@@ -155,6 +155,13 @@
                         <input type="text" id="team-name" placeholder="Your team name" 
                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fpl-green focus:border-transparent">
                         <div class="mt-2 text-sm text-gray-500">Not selected</div>
+                        
+                        <!-- Auto Pick Button -->
+                        <button id="auto-pick-btn" 
+                                class="w-full mt-3 bg-fpl-magenta hover:bg-fpl-magenta/90 text-white font-semibold py-2 px-4 rounded-md transition-colors">
+                            🎲 Auto Pick Squad
+                        </button>
+                        <p class="text-xs text-gray-500 mt-1">Randomly selects 15 players within £100m budget</p>
                     </div>
 
                     <!-- Position Filters -->
@@ -667,6 +674,94 @@
                 console.error('Error:', error);
                 alert('Error saving squad');
             });
+        }
+
+        // Auto Pick Squad functionality
+        document.getElementById('auto-pick-btn').addEventListener('click', function() {
+            this.disabled = true;
+            this.innerHTML = '🔄 Generating Squad...';
+            
+            fetch('{{ route("squad.auto-pick") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Auto-pick response:', data); // Debug log
+                if (data.success) {
+                    // Clear current squad
+                    selectedSquad = {
+                        Goalkeeper: [],
+                        Defender: [],
+                        Midfielder: [],
+                        Forward: []
+                    };
+                    
+                    // Add auto-picked players to squad
+                    data.squad.forEach(player => {
+                        console.log('Adding player:', player); // Debug log
+                        const position = player.position; // Use exact position name from backend
+                        
+                        if (selectedSquad[position]) {
+                            selectedSquad[position].push({
+                                fpl_id: player.id,
+                                web_name: player.name,
+                                position: player.position,
+                                team_id: player.team_id,
+                                team_short: player.team,
+                                team_name: player.team, // Add team_name for team limit check
+                                price: player.price,
+                                jersey_url: player.jersey_url,
+                                photo_url: player.photo_url,
+                                total_points: player.total_points
+                            });
+                        }
+                    });
+                    
+                    console.log('Final selectedSquad:', selectedSquad); // Debug log
+                    console.log('Budget remaining:', data.budget_remaining); // Debug log
+                    
+                    // Update budget
+                    budget = data.budget_remaining;
+                    document.getElementById('budget').textContent = budget.toFixed(1);
+                    
+                    // Update squad display and counts
+                    updateSquadDisplay();
+                    
+                    // Show success message
+                    const message = data.message ? 
+                        `${data.message}` :
+                        `Auto-pick successful! Selected 15 players for £${data.total_cost.toFixed(1)}m`;
+                    alert(message);
+                    
+                    // Redirect to dashboard if provided
+                    if (data.redirect) {
+                        window.location.href = data.redirect;
+                    }
+                    
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error generating auto-pick squad');
+            })
+            .finally(() => {
+                this.disabled = false;
+                this.innerHTML = '🎲 Auto Pick Squad';
+            });
+        });
+
+        // Update squad display after auto-pick
+        function updateSquadDisplay() {
+            // Call the existing updateDisplay function
+            updateDisplay();
+            // Refresh all player lists to update selected states
+            loadPlayerList();
         }
     </script>
 </body>

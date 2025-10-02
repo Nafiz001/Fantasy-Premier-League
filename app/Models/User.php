@@ -61,4 +61,24 @@ class User extends Authenticatable
             'squad_completed' => 'boolean',
         ];
     }
+
+    /**
+     * League relationships
+     */
+    public function leagues()
+    {
+        return $this->belongsToMany(League::class, 'league_members')
+            ->withPivot('joined_at', 'is_admin')
+            ->withTimestamps();
+    }
+
+    public function adminLeagues()
+    {
+        return $this->hasMany(League::class, 'admin_id');
+    }
+
+    public function leagueMembers()
+    {
+        return $this->hasMany(LeagueMember::class);
+    }
 }
