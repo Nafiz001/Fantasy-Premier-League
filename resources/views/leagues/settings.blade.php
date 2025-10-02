@@ -89,10 +89,10 @@
                                 <label for="name" class="block text-sm font-semibold text-gray-900 mb-2">
                                     League Name <span class="text-red-500">*</span>
                                 </label>
-                                <input 
-                                    type="text" 
-                                    id="name" 
-                                    name="name" 
+                                <input
+                                    type="text"
+                                    id="name"
+                                    name="name"
                                     value="{{ old('name', $league->name) }}"
                                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fpl-purple focus:border-transparent"
                                     maxlength="100"
@@ -106,9 +106,9 @@
                                 <label for="description" class="block text-sm font-semibold text-gray-900 mb-2">
                                     Description
                                 </label>
-                                <textarea 
-                                    id="description" 
-                                    name="description" 
+                                <textarea
+                                    id="description"
+                                    name="description"
                                     rows="4"
                                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fpl-purple focus:border-transparent"
                                     maxlength="500"
@@ -121,10 +121,10 @@
                                 <label for="max_entries" class="block text-sm font-semibold text-gray-900 mb-2">
                                     Maximum Members <span class="text-red-500">*</span>
                                 </label>
-                                <input 
-                                    type="number" 
-                                    id="max_entries" 
-                                    name="max_entries" 
+                                <input
+                                    type="number"
+                                    id="max_entries"
+                                    name="max_entries"
                                     value="{{ old('max_entries', $league->max_entries) }}"
                                     min="{{ $league->current_entries }}"
                                     max="100"
@@ -164,13 +164,13 @@
 
                             <!-- Action Buttons -->
                             <div class="flex gap-3">
-                                <button 
+                                <button
                                     type="submit"
                                     class="flex-1 bg-fpl-purple text-white py-3 px-6 rounded-lg font-bold hover:bg-opacity-90 transition-all"
                                 >
                                     Save Changes
                                 </button>
-                                <a 
+                                <a
                                     href="{{ route('leagues.show', $league) }}"
                                     class="flex-1 bg-gray-200 text-gray-800 py-3 px-6 rounded-lg font-bold text-center hover:bg-gray-300 transition-all"
                                 >
@@ -219,7 +219,7 @@
                         <form action="{{ route('leagues.destroy', $league) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this league? This action cannot be undone!');">
                             @csrf
                             @method('DELETE')
-                            <button 
+                            <button
                                 type="submit"
                                 class="w-full bg-red-500 text-white py-2 px-4 rounded-lg font-semibold hover:bg-red-600 transition-all"
                             >
