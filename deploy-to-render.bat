@@ -1,6 +1,6 @@
 @echo off
 echo ========================================
-echo Railway Deployment - Git Push Helper
+echo Render.com Deployment - Git Push Helper
 echo ========================================
 echo.
 
@@ -12,7 +12,7 @@ echo Step 2: Creating commit...
 set /p commit_message="Enter commit message (or press Enter for default): "
 
 if "%commit_message%"=="" (
-    git commit -m "Added Railway deployment configuration"
+    git commit -m "Ready for Render deployment"
 ) else (
     git commit -m "%commit_message%"
 )
@@ -24,7 +24,15 @@ git push origin main
 echo.
 echo ========================================
 echo Done! Your code is now on GitHub.
-echo Next: Go to https://railway.app to deploy
+echo.
+echo Next Steps:
+echo 1. Go to https://render.com
+echo 2. Sign up for FREE (no credit card!)
+echo 3. Create Web Service from your GitHub repo
+echo 4. Add FREE PostgreSQL database
+echo 5. Deploy!
+echo.
+echo See RENDER_DEPLOYMENT.md for full guide
 echo ========================================
 echo.
 

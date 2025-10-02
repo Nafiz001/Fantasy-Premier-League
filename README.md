@@ -5,13 +5,13 @@
 <p align="center">
   <a href="https://laravel.com"><img src="https://img.shields.io/badge/Laravel-12.x-red" alt="Laravel Version"></a>
   <a href="https://tailwindcss.com"><img src="https://img.shields.io/badge/TailwindCSS-4.x-blue" alt="TailwindCSS"></a>
-  <a href="https://railway.app"><img src="https://img.shields.io/badge/Deploy-Railway-blueviolet" alt="Deploy on Railway"></a>
+  <a href="https://render.com"><img src="https://img.shields.io/badge/Deploy-Render-brightgreen" alt="Deploy on Render"></a>
   <a href="https://github.com/Nafiz001/Fantasy-Premier-League/LICENSE"><img src="https://img.shields.io/badge/License-MIT-green" alt="License"></a>
 </p>
 
 # Fantasy Premier League Clone
 
-A fully functional Fantasy Premier League clone built with Laravel 12 and TailwindCSS. Features live FPL data integration, squad management, points calculation (2025/26 rules), and classic league system with GitHub-powered deployment.
+A fully functional Fantasy Premier League clone built with Laravel 12 and TailwindCSS. Features live FPL data integration, squad management, points calculation (2025/26 rules), and classic league system with **100% FREE deployment on Render.com**.
 
 ## ✨ Features
 
@@ -24,7 +24,7 @@ A fully functional Fantasy Premier League clone built with Laravel 12 and Tailwi
 - 🏆 **League System**: Create and join classic leagues with leaderboards
 - 📈 **Gameweek Navigation**: View points breakdown across all gameweeks
 - 🎨 **Responsive Design**: Beautiful UI that works on all devices
-- 🚀 **One-Click Deploy**: Deploy to Railway.app with GitHub integration
+- 🆓 **FREE Deployment**: Deploy on Render.com with PostgreSQL - NO credit card!
 
 ### League Features
 - Create public or private leagues
@@ -33,20 +33,25 @@ A fully functional Fantasy Premier League clone built with Laravel 12 and Tailwi
 - Admin settings for league management
 - League member statistics
 
-## 🚀 Quick Deploy to Railway
+## 🚀 Deploy for FREE on Render.com
 
-**Deploy your Fantasy Premier League app in 5 minutes!**
+**Deploy your Fantasy Premier League app in 5 minutes - 100% FREE!**
 
-[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/laravel)
+✅ **No credit card required**  
+✅ **Free PostgreSQL database included**  
+✅ **Free SSL certificate**  
+✅ **Automatic GitHub deployments**  
+✅ **750 hours/month free** (24/7 for a month!)  
 
 ### Quick Steps:
 1. Push code to GitHub
-2. Connect Railway to your GitHub repo
-3. Add MySQL database in Railway
-4. Set environment variables
-5. Deploy! ✅
+2. Sign up on Render.com (free)
+3. Create Web Service from your GitHub repo
+4. Add free PostgreSQL database
+5. Set environment variables
+6. Deploy! ✅
 
-**📚 Full Guide**: See [RAILWAY_QUICKSTART.md](RAILWAY_QUICKSTART.md) for detailed instructions.
+**📚 Full Guide**: See [RENDER_DEPLOYMENT.md](RENDER_DEPLOYMENT.md) for detailed instructions.
 
 ---
 
@@ -57,7 +62,7 @@ A fully functional Fantasy Premier League clone built with Laravel 12 and Tailwi
 - PHP 8.2 or higher
 - Composer
 - Node.js and NPM (v18+)
-- MySQL or XAMPP
+- MySQL or PostgreSQL
 - Git
 
 ### Installation
@@ -134,10 +139,7 @@ A fully functional Fantasy Premier League clone built with Laravel 12 and Tailwi
 
 ## 📖 Documentation
 
-- **[RAILWAY_QUICKSTART.md](RAILWAY_QUICKSTART.md)** - Deploy to Railway in 5 minutes
-- **[RAILWAY_DEPLOYMENT.md](RAILWAY_DEPLOYMENT.md)** - Complete deployment guide
-- **[RAILWAY_CHECKLIST.md](RAILWAY_CHECKLIST.md)** - Pre/post deployment checklist
-- **[DEPLOYMENT_SUMMARY.md](DEPLOYMENT_SUMMARY.md)** - Overview of deployment setup
+- **[RENDER_DEPLOYMENT.md](RENDER_DEPLOYMENT.md)** - Complete FREE deployment guide for Render.com
 
 ---
 
@@ -145,9 +147,9 @@ A fully functional Fantasy Premier League clone built with Laravel 12 and Tailwi
 
 - **Backend**: Laravel 12.x (PHP 8.2)
 - **Frontend**: Vite + Tailwind CSS 4.x
-- **Database**: MySQL
+- **Database**: MySQL (local) / PostgreSQL (production on Render)
 - **APIs**: Official FPL API integration
-- **Deployment**: Railway.app (recommended), also supports Vercel, Heroku, etc.
+- **Deployment**: Render.com (100% FREE tier!)
 
 ---
 
@@ -201,22 +203,21 @@ fantasy-premier-league/
 
 ---
 
-## 🚢 Deployment Options
+## 🚢 Deployment
 
-### Railway.app (Recommended)
-✅ Full Laravel support  
+### Render.com (Recommended - 100% FREE)
+✅ Completely FREE (no credit card required)  
+✅ Free PostgreSQL database included  
 ✅ Automatic GitHub deployments  
-✅ Built-in MySQL  
-✅ $5 free monthly credit  
-✅ SSL included  
+✅ Free SSL certificate  
+✅ 750 hours/month (24/7 coverage)  
 
-**See**: [RAILWAY_QUICKSTART.md](RAILWAY_QUICKSTART.md)
+**See**: [RENDER_DEPLOYMENT.md](RENDER_DEPLOYMENT.md)
 
 ### Other Options
-- **Laravel Vapor**: AWS Lambda serverless
-- **Laravel Forge**: DigitalOcean/AWS deployment
-- **Heroku**: Easy platform-as-a-service
-- **Render.com**: Free tier available
+- **Heroku**: Easy deployment (paid)
+- **Laravel Forge**: Professional deployment (paid)
+- **DigitalOcean**: VPS hosting (paid)
 
 ---
 
