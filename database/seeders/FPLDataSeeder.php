@@ -345,7 +345,13 @@ class FPLDataSeeder extends Seeder
         }
 
         // Loop through each gameweek to get player gameweek stats
+        // Skip gameweek 1 as it will be imported from FPL API for accuracy
         foreach ($existingGameweekIds as $gw) {
+            if ($gw == 1) {
+                echo "   → Skipping gameweek 1 (will be imported from FPL API)\n";
+                continue;
+            }
+
             try {
                 echo "   → Processing gameweek {$gw}...\n";
 

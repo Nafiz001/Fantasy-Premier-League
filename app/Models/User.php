@@ -29,11 +29,14 @@ class User extends Authenticatable
         'active_chip',
         'used_chips',
         'starting_xi',
+        'selected_squad',
         'captain_id',
         'vice_captain_id',
         'formation',
         'gameweek',
         'squad_completed',
+        'current_gameweek',
+        'gameweek_points',
     ];
 
     /**
@@ -58,6 +61,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'used_chips' => 'array',
             'starting_xi' => 'array',
+            'selected_squad' => 'array',
             'squad_completed' => 'boolean',
         ];
     }

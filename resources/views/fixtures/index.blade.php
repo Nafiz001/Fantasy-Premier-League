@@ -78,12 +78,16 @@
 
                 <div class="text-center">
                     <h2 class="text-xl font-bold text-gray-900">Gameweek {{ $currentGameweek }}</h2>
-                    <p class="text-sm text-gray-600">Sat 13 Sep, 16:00</p>
-                    <div class="mt-2">
-                        <span class="bg-fpl-purple text-white px-3 py-1 rounded-full text-sm">
-                            Deadline: Sat 13 Sep, 16:00
-                        </span>
-                    </div>
+                    @if($gameweekData && $gameweekData->deadline_time)
+                        <p class="text-sm text-gray-600">{{ \Carbon\Carbon::parse($gameweekData->deadline_time)->format('D j M, H:i') }}</p>
+                        <div class="mt-2">
+                            <span class="bg-fpl-purple text-white px-3 py-1 rounded-full text-sm">
+                                Deadline: {{ \Carbon\Carbon::parse($gameweekData->deadline_time)->format('D j M, H:i') }}
+                            </span>
+                        </div>
+                    @else
+                        <p class="text-sm text-gray-600">No deadline available</p>
+                    @endif
                     <p class="text-xs text-gray-500 mt-2">*All times are shown in your local time</p>
                 </div>
 

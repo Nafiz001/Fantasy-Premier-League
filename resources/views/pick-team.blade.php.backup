@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Pick Team - Fantasy Premier League</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'fpl-purple': '#38003c',
+                        'fpl-magenta': '#e90052',
+                        'fpl-green': '#00ff85',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #38003c 0%, #e90052 50%, #00ff85 100%);
+            min-height: 100vh;
+        }
+
+        .pitch-player {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .pitch-player:hover {
+            transform: scale(1.05);
+        }
+
+        .pitch-player .captain-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 24px;
+            height: 24px;
+            background: #fbbf24;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 12px;
+            color: white;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .pitch-player .vice-captain-badge {
+            background: #6b7280;
+        }
+
+        .bench-player {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .bench-player:hover {
+            background-color: #f3f4f6;
+            transform: translateY(-2px);
+        }
+
+        .player-menu {
+            display: none;
+            position: fixed;
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            z-index: 1000;
+            min-width: 200px;
+        }
+
+        .player-menu.active {
+            display: block;
+        }
+
+        .player-menu button {
+            display: block;
+            width: 100%;
+            padding: 12px 16px;
+            text-align: left;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        .player-menu button:hover {
+            background: #f3f4f6;
+        }
+
+        .player-menu button:first-child {
+            border-top-left-radius: 6px;
+            border-top-right-radius: 6px;
+        }
+
+        .player-menu button:last-child {
+            border-bottom-left-radius: 6px;
+            border-bottom-right-radius: 6px;
+        }
+
+        .substitute-menu {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Header -->
+    @include('partials.navigation')
+
+    <!-- Main Content -->
+    <div class="min-h-screen">
+        <div class="max-w-7xl mx-auto px-4 py-6">
+            <!-- Header Section -->
+            <div class="bg-white/95 backdrop-blur-sm rounded-lg p-6 mb-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900 mb-2">Pick Team</h1>
+                        <p class="text-gray-600">Select your starting XI, captain, and vice-captain for {{ $nextGameweek ? 'Gameweek ' . $nextGameweek->gameweek_id : 'the next gameweek' }}</p>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-lg font-bold text-gray-900">Deadline</div>
+                        @if($nextGameweek)
+                            <div class="text-sm text-gray-600">{{ \Carbon\Carbon::parse($nextGameweek->deadline_time)->format('D j M, H:i') }}</div>
+                            @php
+                                $now = new \DateTime();
+                                $deadline = new \DateTime($nextGameweek->deadline_time);
+                                $diff = $now->diff($deadline);
+                                
+                                if ($diff->invert) {
+                                    $timeRemaining = 'Deadline passed';
+                                    $textColor = 'text-gray-500';
+                                } else {
+                                    $days = $diff->days;
+                                    $hours = $diff->h;
+                                    $minutes = $diff->i;
+                                    
+                                    if ($days > 0) {
+                                        $timeRemaining = $days . ' day' . ($days > 1 ? 's' : '') . ' remaining';
+                                        $textColor = 'text-green-600';
+                                    } elseif ($hours > 0) {
+                                        $timeRemaining = $hours . ' hour' . ($hours > 1 ? 's' : '') . ' remaining';
+                                        $textColor = 'text-orange-600';
+                                    } else {
+                                        $timeRemaining = $minutes . ' minute' . ($minutes > 1 ? 's' : '') . ' remaining';
+                                        $textColor = 'text-red-600';
+                                    }
+                                }
+                            @endphp
+                            <div class="text-xs {{ $textColor }} font-medium">{{ $timeRemaining }}</div>
+                        @else
+                            <div class="text-sm text-gray-600">TBD</div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+            <!-- Team Management Interface -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Pitch and Formation -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white/95 backdrop-blur-sm rounded-lg p-6 mb-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-semibold text-gray-900">Formation</h3>
+                            <select id="formation-select" class="px-3 py-2 border border-gray-300 rounded-lg">
+                                <option value="4-4-2">4-4-2</option>
+                                <option value="3-5-2">3-5-2</option>
+                                <option value="4-5-1">4-5-1</option>
+                                <option value="3-4-3">3-4-3</option>
+                                <option value="4-3-3">4-3-3</option>
+                            </select>
+                        </div>
+
+                        <!-- Football Pitch -->
+                        <div class="relative w-full h-[700px] bg-gradient-to-b from-green-400 to-green-500 rounded-lg overflow-hidden" id="pitch">
+                            <!-- Pitch Lines -->
+                            <div class="absolute inset-0">
+                                <div class="absolute inset-4 border-2 border-white/60 rounded"></div>
+                                <div class="absolute top-4 left-1/2 transform -translate-x-1/2 w-32 h-16 border-2 border-white/60"></div>
+                                <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-32 h-16 border-2 border-white/60"></div>
+                                <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-24 h-24 border-2 border-white/60 rounded-full"></div>
+                                <div class="absolute top-1/2 left-4 right-4 h-0.5 bg-white/60"></div>
+                            </div>
+
+                            <!-- Starting XI - Dynamic based on formation -->
+                            <div id="starting-xi-container" class="relative w-full h-full pt-8">
+                                <!-- Will be populated by JavaScript -->
+                            </div>
+                        </div>
+
+                        <!-- Bench Section -->
+                        <div class="mt-4 bg-white/20 backdrop-blur-sm rounded-lg p-4">
+                            <div class="flex items-center justify-between mb-3">
+                                <h4 class="text-white font-semibold">Bench</h4>
+                                <span class="text-white/80 text-sm">Click to substitute</span>
+                            </div>
+                            <div class="grid grid-cols-4 gap-3" id="bench-container">
+                                <!-- Will be populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chips Section -->
+                    <div class="bg-white/95 backdrop-blur-sm rounded-lg p-6">
+                        <h3 class="font-semibold text-gray-900 mb-4">Chips</h3>
+                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                            <button class="chip-btn p-4 border-2 border-gray-300 rounded-lg text-center hover:border-fpl-green transition-colors" data-chip="wildcard">
+                                <div class="text-2xl mb-2">🃏</div>
+                                <div class="text-sm font-medium">Wildcard</div>
+                                <div class="text-xs text-gray-500">Free transfers</div>
+                            </button>
+                            <button class="chip-btn p-4 border-2 border-gray-300 rounded-lg text-center hover:border-fpl-green transition-colors" data-chip="freehit">
+                                <div class="text-2xl mb-2">🎯</div>
+                                <div class="text-sm font-medium">Free Hit</div>
+                                <div class="text-xs text-gray-500">One week change</div>
+                            </button>
+                            <button class="chip-btn p-4 border-2 border-gray-300 rounded-lg text-center hover:border-fpl-green transition-colors" data-chip="bench-boost">
+                                <div class="text-2xl mb-2">⚡</div>
+                                <div class="text-sm font-medium">Bench Boost</div>
+                                <div class="text-xs text-gray-500">Bench points</div>
+                            </button>
+                            <button class="chip-btn p-4 border-2 border-gray-300 rounded-lg text-center hover:border-fpl-green transition-colors" data-chip="triple-captain">
+                                <div class="text-2xl mb-2">👑</div>
+                                <div class="text-sm font-medium">Triple Captain</div>
+                                <div class="text-xs text-gray-500">3x captain</div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Squad Panel - Simplified -->
+                <div class="space-y-6">
+                    <!-- Team Info -->
+                    <div class="bg-white/95 backdrop-blur-sm rounded-lg p-4">
+                        <h3 class="font-semibold text-gray-900 mb-3">Team Selection</h3>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Starting XI:</span>
+                                <span id="starting-count" class="font-semibold">0/11</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Captain:</span>
+                                <span id="captain-display" class="font-semibold">None</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Vice-Captain:</span>
+                                <span id="vice-captain-display" class="font-semibold">None</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Save Button -->
+                    <button id="save-team" class="w-full py-3 bg-gray-400 text-white rounded-lg cursor-not-allowed font-semibold" disabled>
+                        Save Team Selection
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Player Menu (Captain/Vice-Captain) -->
+    <div id="player-menu" class="player-menu">
+        <!-- Will be populated by JavaScript -->
+    </div>
+
+    <!-- Substitute Menu (for bench players) -->
+    <div id="substitute-menu" class="player-menu substitute-menu">
+        <!-- Will be populated by JavaScript -->
+    </div>
+
+    <!-- JavaScript for Drag & Drop and Team Management -->
+    <script>
+        let selectedChip = null;
+        let currentCaptain = null;
+        let currentViceCaptain = null;
+        let startingXI = [];
+        let hasChanges = false;
+        let initialState = null;
+
+        // Team data from database
+        const teamData = @json($teamData);
+
+        // Formation configurations
+        const formations = {
+            '4-4-2': { def: 4, mid: 4, fwd: 2 },
+            '3-5-2': { def: 3, mid: 5, fwd: 2 },
+            '4-5-1': { def: 4, mid: 5, fwd: 1 },
+            '3-4-3': { def: 3, mid: 4, fwd: 3 },
+            '4-3-3': { def: 4, mid: 3, fwd: 3 }
+        };
+
+        // Enable/disable save button based on changes
+        function updateSaveButton() {
+            const saveBtn = document.getElementById('save-team');
+            const currentState = JSON.stringify({
+                starting_xi: startingXI.sort(),
+                captain: currentCaptain,
+                vice_captain: currentViceCaptain,
+                formation: document.getElementById('formation-select').value,
+                chip: selectedChip
+            });
+
+            if (initialState !== currentState && startingXI.length === 11) {
+                saveBtn.disabled = false;
+                saveBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
+                saveBtn.classList.add('bg-fpl-purple', 'hover:bg-purple-900', 'transition-colors', 'cursor-pointer');
+                hasChanges = true;
+            } else {
+                saveBtn.disabled = true;
+                saveBtn.classList.add('bg-gray-400', 'cursor-not-allowed');
+                saveBtn.classList.remove('bg-fpl-purple', 'hover:bg-purple-900', 'transition-colors', 'cursor-pointer');
+                hasChanges = false;
+            }
+        }
+
+        // Update pitch layout based on formation
+        function updatePitchLayout(formation) {
+            const config = formations[formation];
+            if (!config) return;
+
+            const defenderSlots = document.getElementById('defender-slots');
+            const midfielderSlots = document.getElementById('midfielder-slots');
+            const forwardSlots = document.getElementById('forward-slots');
+
+            // Clear existing slots but save players
+            const existingPlayers = {
+                def: [],
+                mid: [],
+                fwd: []
+            };
+
+            defenderSlots.querySelectorAll('.pitch-slot.occupied').forEach(slot => {
+                const player = slot.querySelector('.player-pitch-card');
+                if (player) {
+                    existingPlayers.def.push({
+                        slot: slot,
+                        playerId: player.dataset.playerId,
+                        html: player.outerHTML
+                    });
+                }
+            });
+
+            midfielderSlots.querySelectorAll('.pitch-slot.occupied').forEach(slot => {
+                const player = slot.querySelector('.player-pitch-card');
+                if (player) {
+                    existingPlayers.mid.push({
+                        slot: slot,
+                        playerId: player.dataset.playerId,
+                        html: player.outerHTML
+                    });
+                }
+            });
+
+            forwardSlots.querySelectorAll('.pitch-slot.occupied').forEach(slot => {
+                const player = slot.querySelector('.player-pitch-card');
+                if (player) {
+                    existingPlayers.fwd.push({
+                        slot: slot,
+                        playerId: player.dataset.playerId,
+                        html: player.outerHTML
+                    });
+                }
+            });
+
+            // Create new slots
+            defenderSlots.innerHTML = createPositionSlots('DEF', config.def);
+            midfielderSlots.innerHTML = createPositionSlots('MID', config.mid);
+            forwardSlots.innerHTML = createPositionSlots('FWD', config.fwd);
+
+            // Restore players to new slots
+            restorePlayersToSlots(defenderSlots, existingPlayers.def, config.def);
+            restorePlayersToSlots(midfielderSlots, existingPlayers.mid, config.mid);
+            restorePlayersToSlots(forwardSlots, existingPlayers.fwd, config.fwd);
+
+            // Re-attach event listeners
+            attachSlotListeners();
+            updateSaveButton();
+        }
+
+        function createPositionSlots(position, count) {
+            let html = '';
+            for (let i = 0; i < count; i++) {
+                html += `
+                    <div class="pitch-slot" data-position="${position}">
+                        <div class="w-20 h-20 border-2 border-dashed border-white/50 rounded-lg flex items-center justify-center">
+                            <span class="text-white/50 text-xs">${position}</span>
+                        </div>
+                    </div>
+                `;
+            }
+            return html;
+        }
+
+        function restorePlayersToSlots(container, players, maxSlots) {
+            const slots = container.querySelectorAll('.pitch-slot');
+            players.forEach((playerData, index) => {
+                if (index < maxSlots && slots[index]) {
+                    const slot = slots[index];
+                    const playerCard = document.querySelector(`[data-player-id="${playerData.playerId}"].player-card`);
+                    if (playerCard) {
+                        const position = playerCard.dataset.position;
+                        const playerName = playerCard.querySelector('.text-sm.font-medium').textContent;
+                        const jerseyUrl = playerCard.querySelector('img').src;
+
+                        addPlayerToPitch(slot, {
+                            playerId: playerData.playerId,
+                            position: position,
+                            name: playerName,
+                            jerseyUrl: jerseyUrl
+                        }, false);
+                    }
+                }
+            });
+        }
+
+        function attachSlotListeners() {
+            const pitchSlots = document.querySelectorAll('.pitch-slot');
+            pitchSlots.forEach(slot => {
+                // Remove old listeners by cloning
+                const newSlot = slot.cloneNode(true);
+                slot.parentNode.replaceChild(newSlot, slot);
+            });
+
+            // Add new listeners
+            document.querySelectorAll('.pitch-slot').forEach(slot => {
+                slot.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    this.classList.add('droppable');
+                });
+
+                slot.addEventListener('dragleave', function(e) {
+                    this.classList.remove('droppable');
+                });
+
+                slot.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    this.classList.remove('droppable');
+
+                    const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+                    const slotPosition = this.dataset.position;
+
+                    // Check position compatibility
+                    if (isPositionCompatible(data.position, slotPosition)) {
+                        // Check if player is already on the pitch
+                        if (startingXI.includes(data.playerId)) {
+                            const currentSlot = document.querySelector(`[data-player-id="${data.playerId}"].player-pitch-card`)?.closest('.pitch-slot');
+                            if (currentSlot && currentSlot !== this) {
+                                removePlayerFromPitch(currentSlot, data.playerId, false);
+                            } else if (currentSlot === this) {
+                                return;
+                            }
+                        }
+
+                        addPlayerToPitch(this, data);
+
+                        const playerCard = document.querySelector(`[data-player-id="${data.playerId}"].player-card`);
+                        if (playerCard) {
+                            playerCard.classList.add('bg-green-100', 'border-green-500');
+                        }
+                    }
+                });
+            });
+        }
+
+        // Initialize team from database
+        function initializeTeamFromDatabase() {
+            if (teamData.starting_xi && teamData.starting_xi.length > 0) {
+                startingXI = [...teamData.starting_xi];
+
+                // Set captain and vice-captain
+                currentCaptain = teamData.captain_id;
+                currentViceCaptain = teamData.vice_captain_id;
+
+                // Set active chip
+                selectedChip = teamData.active_chip;
+
+                // Set formation
+                document.getElementById('formation-select').value = teamData.formation;
+
+                // Update captain/vice-captain display
+                if (currentCaptain) {
+                    document.getElementById('captain-name').textContent = `Player ${currentCaptain}`;
+                    const captainBtn = document.querySelector(`[data-player-id="${currentCaptain}"].captain-btn`);
+                    if (captainBtn) {
+                        captainBtn.classList.add('bg-yellow-400', 'text-white');
+                    }
+                }
+
+                if (currentViceCaptain) {
+                    document.getElementById('vice-captain-name').textContent = `Player ${currentViceCaptain}`;
+                    const viceBtn = document.querySelector(`[data-player-id="${currentViceCaptain}"].vice-captain-btn`);
+                    if (viceBtn) {
+                        viceBtn.classList.add('bg-gray-400', 'text-white');
+                    }
+                }
+
+                // Set chip selection
+                if (selectedChip) {
+                    const chipBtn = document.querySelector(`[data-chip="${selectedChip}"]`);
+                    if (chipBtn) {
+                        chipBtn.classList.add('border-fpl-green', 'bg-fpl-green/10');
+                    }
+                }
+
+                // Update pitch layout for formation
+                updatePitchLayout(teamData.formation);
+
+                // Place players on pitch
+                teamData.starting_xi.forEach(playerId => {
+                    const playerCard = document.querySelector(`[data-player-id="${playerId}"].player-card`);
+                    if (playerCard) {
+                        const position = playerCard.dataset.position;
+                        const playerName = playerCard.querySelector('.text-sm.font-medium').textContent;
+                        const jerseyUrl = playerCard.querySelector('img').src;
+
+                        const availableSlot = findAvailableSlot(position);
+                        if (availableSlot) {
+                            const playerData = {
+                                playerId: playerId,
+                                position: position,
+                                name: playerName,
+                                jerseyUrl: jerseyUrl
+                            };
+                            addPlayerToPitch(availableSlot, playerData, false);
+                            playerCard.classList.add('bg-green-100', 'border-green-500');
+                        }
+                    }
+                });
+            }
+
+            // Save initial state
+            initialState = JSON.stringify({
+                starting_xi: startingXI.sort(),
+                captain: currentCaptain,
+                vice_captain: currentViceCaptain,
+                formation: document.getElementById('formation-select').value,
+                chip: selectedChip
+            });
+        }
+
+        // Drag and Drop Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const playerCards = document.querySelectorAll('.player-card');
+            const pitchSlots = document.querySelectorAll('.pitch-slot');
+
+            // Initialize team from database
+            initializeTeamFromDatabase();
+
+            // Formation change handler
+            document.getElementById('formation-select').addEventListener('change', function(e) {
+                updatePitchLayout(e.target.value);
+            });
+
+            // Add drag listeners to player cards
+            playerCards.forEach(card => {
+                card.addEventListener('dragstart', function(e) {
+                    const playerName = this.querySelector('.text-sm.font-medium').textContent;
+                    const jerseyUrl = this.querySelector('img').src;
+                    e.dataTransfer.setData('text/plain', JSON.stringify({
+                        playerId: this.dataset.playerId,
+                        position: this.dataset.position,
+                        name: playerName,
+                        jerseyUrl: jerseyUrl,
+                        html: this.outerHTML
+                    }));
+                });
+            });
+
+            // Add drop listeners to pitch slots
+            attachSlotListeners();
+
+            // Player card click handling
+            document.addEventListener('click', function(e) {
+                // Handle captain/vice-captain button clicks
+                if (e.target.classList.contains('captain-btn')) {
+                    selectCaptain(e.target.dataset.playerId);
+                    return;
+                }
+                if (e.target.classList.contains('vice-captain-btn')) {
+                    selectViceCaptain(e.target.dataset.playerId);
+                    return;
+                }
+
+                // Handle player card clicks
+                const playerCard = e.target.closest('.player-card');
+                if (playerCard && !e.target.classList.contains('captain-btn') && !e.target.classList.contains('vice-captain-btn')) {
+                    const playerId = playerCard.dataset.playerId;
+                    const position = playerCard.dataset.position;
+                    const playerName = playerCard.querySelector('.text-sm.font-medium').textContent;
+                    const jerseyUrl = playerCard.querySelector('img').src;
+
+                    // Check if player is already on the pitch
+                    if (startingXI.includes(playerId)) {
+                        alert('This player is already in your starting XI');
+                        return;
+                    }
+
+                    // Find an available slot for this position
+                    const availableSlot = findAvailableSlot(position);
+                    if (availableSlot) {
+                        const playerData = {
+                            playerId: playerId,
+                            position: position,
+                            name: playerName,
+                            jerseyUrl: jerseyUrl
+                        };
+                        addPlayerToPitch(availableSlot, playerData);
+
+                        // Add visual feedback that player is selected
+                        playerCard.classList.add('bg-green-100', 'border-green-500');
+                    } else {
+                        // No available slots, but offer to substitute
+                        const occupiedSlots = document.querySelectorAll(`[data-position="${findPositionCode(position)}"].occupied`);
+                        if (occupiedSlots.length > 0) {
+                            if (confirm(`All ${position} slots are filled. Would you like to substitute a player?`)) {
+                                const playerData = {
+                                    playerId: playerId,
+                                    position: position,
+                                    name: playerName,
+                                    jerseyUrl: jerseyUrl
+                                };
+                                // Use the first occupied slot for substitution
+                                addPlayerToPitch(occupiedSlots[0], playerData);
+
+                                // Add visual feedback that player is selected
+                                playerCard.classList.add('bg-green-100', 'border-green-500');
+                            }
+                        } else {
+                            alert(`No available ${position} slots on the pitch`);
+                        }
+                    }
+                }
+            });
+
+            // Chip selection
+            document.querySelectorAll('.chip-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    selectChip(this.dataset.chip);
+                });
+            });
+
+            // Save team
+            document.getElementById('save-team').addEventListener('click', saveTeamSelection);
+        });
+
+        function findPositionCode(position) {
+            const posMap = {
+                'Goalkeeper': 'GK',
+                'Defender': 'DEF',
+                'Midfielder': 'MID',
+                'Forward': 'FWD'
+            };
+            return posMap[position];
+        }
+
+        function findAvailableSlot(position) {
+            const posMap = {
+                'Goalkeeper': 'GK',
+                'Defender': 'DEF',
+                'Midfielder': 'MID',
+                'Forward': 'FWD'
+            };
+
+            const slotPosition = posMap[position];
+            const slots = document.querySelectorAll(`[data-position="${slotPosition}"]`);
+
+            for (let slot of slots) {
+                if (!slot.classList.contains('occupied')) {
+                    return slot;
+                }
+            }
+            return null;
+        }
+
+        function isPositionCompatible(playerPos, slotPos) {
+            const posMap = {
+                'Goalkeeper': 'GK',
+                'Defender': 'DEF',
+                'Midfielder': 'MID',
+                'Forward': 'FWD'
+            };
+            return posMap[playerPos] === slotPos;
+        }
+
+        function addPlayerToPitch(slot, playerData, trackChanges = true) {
+            // Check if slot is already occupied and remove the previous player
+            if (slot.classList.contains('occupied')) {
+                const existingPlayer = slot.querySelector('.player-pitch-card');
+                if (existingPlayer) {
+                    const existingPlayerId = existingPlayer.dataset.playerId;
+
+                    // Remove from starting XI
+                    const index = startingXI.indexOf(existingPlayerId);
+                    if (index > -1) {
+                        startingXI.splice(index, 1);
+                    }
+
+                    // Remove visual feedback from previous player card
+                    const previousPlayerCard = document.querySelector(`[data-player-id="${existingPlayerId}"].player-card`);
+                    if (previousPlayerCard) {
+                        previousPlayerCard.classList.remove('bg-green-100', 'border-green-500');
+                    }
+
+                    // Remove captain/vice-captain if this player was selected
+                    if (currentCaptain === existingPlayerId) {
+                        currentCaptain = null;
+                        document.getElementById('captain-name').textContent = 'None';
+                        document.querySelectorAll('.captain-btn').forEach(btn => {
+                            btn.classList.remove('bg-yellow-400', 'text-white');
+                        });
+                    }
+
+                    if (currentViceCaptain === existingPlayerId) {
+                        currentViceCaptain = null;
+                        document.getElementById('vice-captain-name').textContent = 'None';
+                        document.querySelectorAll('.vice-captain-btn').forEach(btn => {
+                            btn.classList.remove('bg-gray-400', 'text-white');
+                        });
+                    }
+                }
+            }
+
+            // Create player card for pitch
+            const pitchPlayer = document.createElement('div');
+            pitchPlayer.className = 'player-pitch-card cursor-pointer';
+            pitchPlayer.dataset.playerId = playerData.playerId;
+            pitchPlayer.innerHTML = `
+                <div class="w-16 h-16 bg-white rounded-lg shadow-lg flex items-center justify-center mb-2">
+                    <img src="${playerData.jerseyUrl}" alt="Jersey" class="w-12 h-12 rounded">
+                </div>
+                <div class="bg-white rounded px-2 py-1 text-center shadow-lg">
+                    <div class="text-xs font-semibold text-gray-900">${playerData.name || playerData.playerId}</div>
+                </div>
+            `;
+
+            // Add click to remove functionality
+            pitchPlayer.addEventListener('click', function() {
+                removePlayerFromPitch(slot, playerData.playerId);
+            });
+
+            slot.innerHTML = '';
+            slot.appendChild(pitchPlayer);
+            slot.classList.add('occupied');
+
+            // Add to starting XI
+            if (!startingXI.includes(playerData.playerId)) {
+                startingXI.push(playerData.playerId);
+            }
+
+            if (trackChanges) {
+                updateSaveButton();
+            }
+        }
+
+        function removePlayerFromPitch(slot, playerId, trackChanges = true) {
+            slot.innerHTML = '';
+            slot.classList.remove('occupied');
+
+            // Remove from starting XI
+            const index = startingXI.indexOf(playerId);
+            if (index > -1) {
+                startingXI.splice(index, 1);
+            }
+
+            // Remove visual feedback from player card
+            const playerCard = document.querySelector(`[data-player-id="${playerId}"].player-card`);
+            if (playerCard) {
+                playerCard.classList.remove('bg-green-100', 'border-green-500');
+            }
+
+            // Remove captain/vice-captain if this player was selected
+            if (currentCaptain === playerId) {
+                currentCaptain = null;
+                document.getElementById('captain-name').textContent = 'None';
+                document.querySelectorAll('.captain-btn').forEach(btn => {
+                    btn.classList.remove('bg-yellow-400', 'text-white');
+                });
+            }
+
+            if (currentViceCaptain === playerId) {
+                currentViceCaptain = null;
+                document.getElementById('vice-captain-name').textContent = 'None';
+                document.querySelectorAll('.vice-captain-btn').forEach(btn => {
+                    btn.classList.remove('bg-gray-400', 'text-white');
+                });
+            }
+
+            if (trackChanges) {
+                updateSaveButton();
+            }
+        }
+
+        function selectCaptain(playerId) {
+            // Remove previous captain styling
+            document.querySelectorAll('.captain-btn').forEach(btn => {
+                btn.classList.remove('bg-yellow-400', 'text-white');
+            });
+
+            // Add captain styling
+            const captainBtn = document.querySelector(`[data-player-id="${playerId}"].captain-btn`);
+            if (captainBtn) {
+                captainBtn.classList.add('bg-yellow-400', 'text-white');
+                currentCaptain = playerId;
+                document.getElementById('captain-name').textContent = `Player ${playerId}`;
+                updateSaveButton();
+            }
+        }
+
+        function selectViceCaptain(playerId) {
+            // Remove previous vice-captain styling
+            document.querySelectorAll('.vice-captain-btn').forEach(btn => {
+                btn.classList.remove('bg-gray-400', 'text-white');
+            });
+
+            // Add vice-captain styling
+            const viceBtn = document.querySelector(`[data-player-id="${playerId}"].vice-captain-btn`);
+            if (viceBtn) {
+                viceBtn.classList.add('bg-gray-400', 'text-white');
+                currentViceCaptain = playerId;
+                document.getElementById('vice-captain-name').textContent = `Player ${playerId}`;
+                updateSaveButton();
+            }
+        }
+
+        function selectChip(chipType) {
+            // Remove previous chip selection
+            document.querySelectorAll('.chip-btn').forEach(btn => {
+                btn.classList.remove('border-fpl-green', 'bg-fpl-green/10');
+            });
+
+            // Add chip selection
+            const chipBtn = document.querySelector(`[data-chip="${chipType}"]`);
+            if (chipBtn) {
+                chipBtn.classList.add('border-fpl-green', 'bg-fpl-green/10');
+                selectedChip = chipType;
+                updateSaveButton();
+            }
+        }
+
+        function saveTeamSelection() {
+            // Validate starting XI
+            if (startingXI.length !== 11) {
+                alert(`Please select 11 players for your starting XI. You currently have ${startingXI.length} player${startingXI.length !== 1 ? 's' : ''}.`);
+                return;
+            }
+
+            if (!currentCaptain) {
+                alert('Please select a captain');
+                return;
+            }
+
+            if (!currentViceCaptain) {
+                alert('Please select a vice-captain');
+                return;
+            }
+
+            const data = {
+                starting_xi: startingXI,
+                captain: currentCaptain,
+                vice_captain: currentViceCaptain,
+                formation: document.getElementById('formation-select').value,
+                chip: selectedChip,
+                _token: document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            };
+
+            fetch('{{ route("pick.team.save") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Team selection saved successfully!');
+                    // Update initial state to current state
+                    initialState = JSON.stringify({
+                        starting_xi: startingXI.sort(),
+                        captain: currentCaptain,
+                        vice_captain: currentViceCaptain,
+                        formation: document.getElementById('formation-select').value,
+                        chip: selectedChip
+                    });
+                    updateSaveButton();
+                } else {
+                    alert('Error saving team selection');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error saving team selection');
+            });
+        }
+    </script>
+</body>
+</html>

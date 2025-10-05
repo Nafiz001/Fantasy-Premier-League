@@ -74,8 +74,19 @@
                         <p class="text-gray-600">Your Fantasy Premier League Squad</p>
                     </div>
                     <div class="text-right">
-                        <div class="text-lg font-bold text-gray-900">Gameweek 3</div>
-                        <div class="text-sm text-gray-600">Team Value: £100.0m</div>
+                        @if(isset($nextGameweek))
+                            <div class="text-lg font-bold text-gray-900">{{ $nextGameweek->name }}</div>
+                            <div class="text-sm text-gray-600">
+                                @if($nextGameweek->finished)
+                                    Finished
+                                @else
+                                    Deadline: {{ date('D j M, H:i', strtotime($nextGameweek->deadline_time)) }}
+                                @endif
+                            </div>
+                        @else
+                            <div class="text-lg font-bold text-gray-900">Gameweek 3</div>
+                            <div class="text-sm text-gray-600">Team Value: £100.0m</div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -225,77 +236,80 @@
             <div class="bg-white/95 backdrop-blur-sm rounded-lg p-6 mb-6">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4 text-center">Substitutes</h3>
                 <div class="flex justify-center space-x-6">
-                    <!-- GKP -->
-                    <div class="text-center">
-                        <div class="text-sm font-medium text-gray-600 mb-2">GKP</div>
-                        @if(isset($squad['goalkeepers'][1]))
-                            <div class="player-card-bench">
-                                <div class="w-14 h-14 bg-white rounded-lg shadow-lg flex items-center justify-center mb-2 mx-auto">
-                                    <img src="{{ $squad['goalkeepers'][1]->jersey_url }}"
-                                         alt="Jersey"
-                                         class="w-10 h-10 rounded">
-                                </div>
-                                <div class="bg-white rounded px-2 py-1 text-center shadow-lg">
-                                    <div class="text-xs font-semibold text-gray-900">{{ $squad['goalkeepers'][1]->web_name }}</div>
-                                    <div class="text-xs text-gray-600">{{ $squad['goalkeepers'][1]->team_short }} (H)</div>
-                                </div>
-                            </div>
-                        @endif
-                    </div>
+                    @php
+                        // Use the pre-separated bench players from controller
+                        $benchPlayers = [];
+                        $benchIndex = 1;
 
-                    <!-- 1. DEF -->
-                    <div class="text-center">
-                        <div class="text-sm font-medium text-gray-600 mb-2">1. DEF</div>
-                        @if(isset($squad['defenders'][4]))
-                            <div class="player-card-bench">
-                                <div class="w-14 h-14 bg-white rounded-lg shadow-lg flex items-center justify-center mb-2 mx-auto">
-                                    <img src="{{ $squad['defenders'][4]->jersey_url }}"
-                                         alt="Jersey"
-                                         class="w-10 h-10 rounded">
-                                </div>
-                                <div class="bg-white rounded px-2 py-1 text-center shadow-lg">
-                                    <div class="text-xs font-semibold text-gray-900">{{ $squad['defenders'][4]->web_name }}</div>
-                                    <div class="text-xs text-gray-600">{{ $squad['defenders'][4]->team_short }} (H)</div>
-                                </div>
-                            </div>
-                        @endif
-                    </div>
+                        // Backup GK (from bench goalkeepers)
+                        if (isset($benchSquad['goalkeepers']) && $benchSquad['goalkeepers']->count() > 0) {
+                            $benchPlayers[] = ['player' => $benchSquad['goalkeepers'][0], 'position' => 'GKP', 'label' => 'GKP'];
+                        }
 
-                    <!-- 2. MID -->
-                    <div class="text-center">
-                        <div class="text-sm font-medium text-gray-600 mb-2">2. MID</div>
-                        @if(isset($squad['midfielders'][4]))
-                            <div class="player-card-bench">
-                                <div class="w-14 h-14 bg-white rounded-lg shadow-lg flex items-center justify-center mb-2 mx-auto">
-                                    <img src="{{ $squad['midfielders'][4]->jersey_url }}"
-                                         alt="Jersey"
-                                         class="w-10 h-10 rounded">
-                                </div>
-                                <div class="bg-white rounded px-2 py-1 text-center shadow-lg">
-                                    <div class="text-xs font-semibold text-gray-900">{{ $squad['midfielders'][4]->web_name }}</div>
-                                    <div class="text-xs text-gray-600">{{ $squad['midfielders'][4]->team_short }} (H)</div>
-                                </div>
-                            </div>
-                        @endif
-                    </div>
+                        // Bench defenders
+                        if (isset($benchSquad['defenders']) && $benchSquad['defenders']->count() > 0) {
+                            foreach ($benchSquad['defenders'] as $defender) {
+                                $benchPlayers[] = ['player' => $defender, 'position' => 'DEF', 'label' => $benchIndex . '. DEF'];
+                                $benchIndex++;
+                            }
+                        }
 
-                    <!-- 3. FWD -->
-                    <div class="text-center">
-                        <div class="text-sm font-medium text-gray-600 mb-2">3. FWD</div>
-                        @if(isset($squad['forwards'][2]))
+                        // Bench midfielders
+                        if (isset($benchSquad['midfielders']) && $benchSquad['midfielders']->count() > 0) {
+                            foreach ($benchSquad['midfielders'] as $midfielder) {
+                                $benchPlayers[] = ['player' => $midfielder, 'position' => 'MID', 'label' => $benchIndex . '. MID'];
+                                $benchIndex++;
+                            }
+                        }
+
+                        // Bench forwards
+                        if (isset($benchSquad['forwards']) && $benchSquad['forwards']->count() > 0) {
+                            foreach ($benchSquad['forwards'] as $forward) {
+                                $benchPlayers[] = ['player' => $forward, 'position' => 'FWD', 'label' => $benchIndex . '. FWD'];
+                                $benchIndex++;
+                            }
+                        }
+                    @endphp
+
+                    @foreach($benchPlayers as $benchPlayer)
+                        <div class="text-center">
+                            <div class="text-sm font-medium text-gray-600 mb-2">
+                                {{ $benchPlayer['label'] }}
+                            </div>
                             <div class="player-card-bench">
                                 <div class="w-14 h-14 bg-white rounded-lg shadow-lg flex items-center justify-center mb-2 mx-auto">
-                                    <img src="{{ $squad['forwards'][2]->jersey_url }}"
+                                    <img src="{{ $benchPlayer['player']->jersey_url }}"
                                          alt="Jersey"
                                          class="w-10 h-10 rounded">
                                 </div>
                                 <div class="bg-white rounded px-2 py-1 text-center shadow-lg">
-                                    <div class="text-xs font-semibold text-gray-900">{{ $squad['forwards'][2]->web_name }}</div>
-                                    <div class="text-xs text-gray-600">{{ $squad['forwards'][2]->team_short }} (H)</div>
+                                    <div class="text-xs font-semibold text-gray-900">{{ $benchPlayer['player']->web_name }}</div>
+                                    <div class="text-xs text-gray-600">{{ $benchPlayer['player']->team_short }} (H)</div>
                                 </div>
                             </div>
-                        @endif
-                    </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+
+                    @foreach($benchPlayers as $index => $benchPlayer)
+                        <div class="text-center">
+                            <div class="text-sm font-medium text-gray-600 mb-2">
+                                {{ $benchPlayer['label'] }}
+                            </div>
+                            <div class="player-card-bench">
+                                <div class="w-14 h-14 bg-white rounded-lg shadow-lg flex items-center justify-center mb-2 mx-auto">
+                                    <img src="{{ $benchPlayer['player']->jersey_url }}"
+                                         alt="Jersey"
+                                         class="w-10 h-10 rounded">
+                                </div>
+                                <div class="bg-white rounded px-2 py-1 text-center shadow-lg">
+                                    <div class="text-xs font-semibold text-gray-900">{{ $benchPlayer['player']->web_name }}</div>
+                                    <div class="text-xs text-gray-600">{{ $benchPlayer['player']->team_short }} (H)</div>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
                 </div>
             </div>
 

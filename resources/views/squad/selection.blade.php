@@ -137,7 +137,11 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <h1 class="text-2xl font-bold text-gray-900 mb-2">Player Selection</h1>
-                        <p class="text-gray-600">Select 15 players to complete your squad. Deadline for GW 1 is Sun, 18 Aug, 13:30</p>
+                        @if(isset($nextGameweek))
+                            <p class="text-gray-600">Select 15 players to complete your squad. Deadline for GW {{ $nextGameweek->gameweek_id }} is {{ date('D, j M, H:i', strtotime($nextGameweek->deadline_time)) }}</p>
+                        @else
+                            <p class="text-gray-600">Select 15 players to complete your squad.</p>
+                        @endif
                     </div>
                     <div class="text-right">
                         <div class="text-lg font-bold text-gray-900">£<span id="budget">100.0</span>m</div>
@@ -335,10 +339,39 @@
 
                     <!-- Fixtures Preview -->
                     <div class="bg-white/95 backdrop-blur-sm rounded-lg p-6 mt-6">
-                        <h3 class="font-semibold text-gray-900 mb-4">Fixtures</h3>
+                        <h3 class="font-semibold text-gray-900 mb-4">Next Gameweek</h3>
                         <div class="text-center text-gray-500">
-                            <p>Gameweek 4</p>
-                            <p class="text-sm">Deadline: Sat 14 Sep, 16:00</p>
+                            @if(isset($nextGameweek))
+                                <p class="text-lg font-bold text-gray-900">Gameweek {{ $nextGameweek->gameweek_id }}</p>
+                                <p class="text-sm">Deadline: {{ date('D j M, H:i', strtotime($nextGameweek->deadline_time)) }}</p>
+                                @if(!$nextGameweek->finished)
+                                    @php
+                                        $deadline = new DateTime($nextGameweek->deadline_time);
+                                        $now = new DateTime();
+                                        $interval = $now->diff($deadline);
+                                        
+                                        if ($interval->invert) {
+                                            $timeRemaining = 'Deadline passed';
+                                        } else {
+                                            $days = $interval->days;
+                                            $hours = $interval->h;
+                                            
+                                            if ($days > 0) {
+                                                $timeRemaining = "{$days} day" . ($days > 1 ? 's' : '') . ", {$hours} hour" . ($hours > 1 ? 's' : '') . " remaining";
+                                            } elseif ($hours > 0) {
+                                                $timeRemaining = "{$hours} hour" . ($hours > 1 ? 's' : '') . " remaining";
+                                            } else {
+                                                $minutes = $interval->i;
+                                                $timeRemaining = "{$minutes} minute" . ($minutes > 1 ? 's' : '') . " remaining";
+                                            }
+                                        }
+                                    @endphp
+                                    <p class="text-xs text-gray-400 mt-2">{{ $timeRemaining }}</p>
+                                @endif
+                            @else
+                                <p>Gameweek 4</p>
+                                <p class="text-sm">Deadline: Sat 14 Sep, 16:00</p>
+                            @endif
                         </div>
                         <!-- Fixture list would go here -->
                     </div>

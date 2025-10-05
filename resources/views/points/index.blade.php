@@ -116,7 +116,7 @@
                         <h2 class="text-xl font-bold text-gray-900 mb-6">Squad Performance</h2>
 
                         <!-- Football Pitch Layout - Exact copy from squad view -->
-                        <div class="relative w-full h-[600px] bg-gradient-to-b from-green-400 to-green-500 rounded-lg overflow-hidden mb-6">
+                        <div class="relative w-full h-[650px] bg-gradient-to-b from-green-400 to-green-500 rounded-lg overflow-hidden mb-6">
                             <!-- Pitch Lines -->
                             <div class="absolute inset-0">
                                 <!-- Outer boundary -->
@@ -171,7 +171,7 @@
                                         </div>
                                         <div class="bg-white rounded px-2 py-1 text-center shadow-lg">
                                             <div class="text-xs font-semibold text-gray-900">{{ $playerData['player']->web_name }}</div>
-                                            <div class="text-xs text-gray-600">{{ $playerData['player']->team_short ?? 'TBC' }}</div>
+                                            <div class="text-xs text-gray-600">{{ $playerData['player']->team->short_name ?? 'TBC' }}</div>
                                             <div class="text-sm font-bold text-fpl-purple">{{ $playerData['points'] }}pts</div>
                                             @if($playerData['multiplier'] > 1)
                                                 <div class="text-xs text-fpl-magenta">({{ $playerData['original_points'] }} x {{ $playerData['multiplier'] }})</div>
@@ -198,7 +198,7 @@
                                         </div>
                                         <div class="bg-white rounded px-2 py-1 text-center shadow-lg">
                                             <div class="text-xs font-semibold text-gray-900">{{ $playerData['player']->web_name }}</div>
-                                            <div class="text-xs text-gray-600">{{ $playerData['player']->team_short ?? 'TBC' }}</div>
+                                            <div class="text-xs text-gray-600">{{ $playerData['player']->team->short_name ?? 'TBC' }}</div>
                                             <div class="text-sm font-bold text-fpl-purple">{{ $playerData['points'] }}pts</div>
                                             @if($playerData['multiplier'] > 1)
                                                 <div class="text-xs text-fpl-magenta">({{ $playerData['original_points'] }} x {{ $playerData['multiplier'] }})</div>
@@ -225,7 +225,7 @@
                                         </div>
                                         <div class="bg-white rounded px-2 py-1 text-center shadow-lg">
                                             <div class="text-xs font-semibold text-gray-900">{{ $playerData['player']->web_name }}</div>
-                                            <div class="text-xs text-gray-600">{{ $playerData['player']->team_short ?? 'TBC' }}</div>
+                                            <div class="text-xs text-gray-600">{{ $playerData['player']->team->short_name ?? 'TBC' }}</div>
                                             <div class="text-sm font-bold text-fpl-purple">{{ $playerData['points'] }}pts</div>
                                             @if($playerData['multiplier'] > 1)
                                                 <div class="text-xs text-fpl-magenta">({{ $playerData['original_points'] }} x {{ $playerData['multiplier'] }})</div>
@@ -252,7 +252,7 @@
                                         </div>
                                         <div class="bg-white rounded px-2 py-1 text-center shadow-lg">
                                             <div class="text-xs font-semibold text-gray-900">{{ $playerData['player']->web_name }}</div>
-                                            <div class="text-xs text-gray-600">{{ $playerData['player']->team_short ?? 'TBC' }}</div>
+                                            <div class="text-xs text-gray-600">{{ $playerData['player']->team->short_name ?? 'TBC' }}</div>
                                             <div class="text-sm font-bold text-fpl-purple">{{ $playerData['points'] }}pts</div>
                                             @if($playerData['multiplier'] > 1)
                                                 <div class="text-xs text-fpl-magenta">({{ $playerData['original_points'] }} x {{ $playerData['multiplier'] }})</div>

@@ -11,7 +11,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // Auto-seed FPL data when database is empty
+        $middleware->web(append: [
+            \App\Http\Middleware\AutoSeedFPLData::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

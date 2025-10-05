@@ -14,6 +14,34 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+// Manual data refresh route (for development/admin use)
+Route::get('/refresh-data', function () {
+    try {
+        // Run GitHub data seeder (GW2-38)
+        Artisan::call('db:seed', [
+            '--class' => 'FPLDataSeeder',
+            '--force' => true
+        ]);
+
+        $output = Artisan::output();
+
+        // Import GW1 data from FPL API
+        $gw1Service = new \App\Services\FPLGameweek1Service();
+        $gw1Service->importGameweek1Data();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'FPL data refreshed successfully! GitHub data (GW2-38) and FPL API data (GW1) imported.',
+            'output' => $output
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Error refreshing data: ' . $e->getMessage()
+        ], 500);
+    }
+})->name('refresh.data');
+
 // Authentication Routes
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);

@@ -33,10 +33,13 @@ class FPLPointsService
 
     /**
      * Calculate FPL points for a player in a specific gameweek
+     * FIXED: Now uses player_gameweek_stats (per-gameweek data) instead of player_stats (cumulative data)
      */
     public function calculatePlayerPoints($playerId, $gameweekId)
     {
-        $stat = PlayerStat::where('player_id', $playerId)
+        // Use player_gameweek_stats table for per-gameweek data
+        $stat = DB::table('player_gameweek_stats')
+            ->where('player_id', $playerId)
             ->where('gameweek', $gameweekId)
             ->first();
 
@@ -44,6 +47,12 @@ class FPLPointsService
             return 0;
         }
 
+        // If total_points is already calculated, use it
+        if (isset($stat->total_points) && $stat->total_points > 0) {
+            return $stat->total_points;
+        }
+
+        // Otherwise calculate from stats
         $player = Player::where('fpl_id', $playerId)->first();
         if (!$player) {
             return 0;
@@ -272,8 +281,8 @@ class FPLPointsService
             return ['total_points' => 0, 'player_details' => [], 'count' => 0, 'gameweek_id' => $gameweekId];
         }
 
-        // Get player details
-        $players = Player::whereIn('fpl_id', $playerIds)->get()->keyBy('fpl_id');
+        // Get player details with team relationship
+        $players = Player::with('team')->whereIn('fpl_id', $playerIds)->get()->keyBy('fpl_id');
 
         // Group players by position for formation-based selection
         $playersByPosition = [
@@ -346,12 +355,61 @@ class FPLPointsService
             ];
         }
 
+        // Auto-update user's gameweek points in users table
+        $this->updateUserGameweekData($userId, $gameweekId, $totalPoints);
+
         return [
             'total_points' => $totalPoints,
             'player_details' => $playersWithPoints,
             'count' => count($playersWithPoints),
             'gameweek_id' => $gameweekId
         ];
+    }
+
+    /**
+     * Update user's gameweek data in users table
+     */
+    private function updateUserGameweekData($userId, $gameweekId, $points)
+    {
+        $user = User::find($userId);
+
+        if (!$user) {
+            return false;
+        }
+
+        // Only update if this is a newer gameweek or first time
+        if ($gameweekId >= ($user->current_gameweek ?? 0)) {
+            // If it's a new gameweek, save the current gameweek points before updating
+            if ($gameweekId > ($user->current_gameweek ?? 0)) {
+                // Reset gameweek points for new gameweek
+                $user->current_gameweek = $gameweekId;
+                $user->gameweek_points = $points;
+            } else {
+                // Same gameweek, just update the points (in case of recalculation)
+                $user->gameweek_points = $points;
+            }
+
+            // Recalculate total points from all gameweeks
+            $totalPoints = DB::table('player_gameweek_stats')
+                ->whereIn('player_id', function($query) use ($user) {
+                    $startingXI = is_string($user->starting_xi) ? json_decode($user->starting_xi, true) : $user->starting_xi;
+                    if ($startingXI && is_array($startingXI)) {
+                        $playerIds = array_map(function($playerData) {
+                            $fplId = is_array($playerData) ? ($playerData['player_id'] ?? $playerData['id'] ?? null) : $playerData;
+                            return DB::table('players')->where('fpl_id', $fplId)->value('id');
+                        }, $startingXI);
+                        $playerIds = array_filter($playerIds);
+                        $query->select('id')->from('players')->whereIn('id', $playerIds);
+                    }
+                })
+                ->where('gameweek', '<=', $gameweekId)
+                ->sum('total_points');
+
+            $user->points = $totalPoints ?? 0;
+            $user->save();
+        }
+
+        return true;
     }
 
     /**

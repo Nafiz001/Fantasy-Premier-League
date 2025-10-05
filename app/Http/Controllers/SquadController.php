@@ -6,15 +6,19 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use App\Services\FPLPointsService;
+use App\Services\FPLNewsService;
 
 class SquadController extends Controller
 {
     protected $pointsService;
+    protected $newsService;
 
-    public function __construct(FPLPointsService $pointsService)
+    public function __construct(FPLPointsService $pointsService, FPLNewsService $newsService)
     {
         $this->pointsService = $pointsService;
+        $this->newsService = $newsService;
     }
+
     public function showSelection()
     {
         // Get players grouped by position with their current stats
@@ -23,40 +27,53 @@ class SquadController extends Controller
         $midfielders = $this->getPlayersByPosition('Midfielder');
         $forwards = $this->getPlayersByPosition('Forward');
 
-        return view('squad.selection', compact('goalkeepers', 'defenders', 'midfielders', 'forwards'));
+        // Get the NEXT gameweek (upcoming one) for display
+        $nextGameweek = DB::table('gameweeks')->where('is_next', true)->first()
+            ?? DB::table('gameweeks')->where('finished', false)->orderBy('gameweek_id')->first();
+
+        return view('squad.selection', compact('goalkeepers', 'defenders', 'midfielders', 'forwards', 'nextGameweek'));
     }
 
     public function dashboard()
     {
         $user = Auth::user();
 
-        // Get user's team data
-        $startingXI = $user->starting_xi ?? [];
+        // Use helper to get full squad
+        $squadData = $this->getUserFullSquad($user);
 
-        // Ensure it's always an array (handle both JSON string and array cases)
-        if (is_string($startingXI)) {
-            $startingXI = json_decode($startingXI, true) ?? [];
-        }
+        // Get latest finished gameweek ID
+        $latestGameweekId = $this->pointsService->getLatestFinishedGameweekId();
 
-        // Get latest points data
-        $squadPoints = $this->pointsService->getSquadPoints($user->id);
-        $currentGameweek = $this->pointsService->getCurrentGameweek();
+        // Use the SAME method as Points page (getSquadPointsForGameweek)
+        $squadPoints = $latestGameweekId ? $this->pointsService->getSquadPointsForGameweek($user->id, $latestGameweekId) : null;
 
+        // Get the NEXT gameweek (upcoming one) for dashboard display
+        $currentGameweek = DB::table('gameweeks')->where('is_next', true)->first()
+            ?? DB::table('gameweeks')->where('finished', false)->orderBy('gameweek_id')->first();
+
+        // Use points from database (automatically updated by FPLPointsService)
         $teamData = [
-            'starting_xi' => $startingXI,
+            'starting_xi' => $squadData['startingXI'],
+            'bench' => $squadData['bench'],
+            'full_squad' => $squadData['fullSquad'],
             'captain_id' => $user->captain_id,
             'vice_captain_id' => $user->vice_captain_id,
             'formation' => $user->formation ?? '4-4-2',
             'active_chip' => $user->active_chip,
             'used_chips' => $user->used_chips ?? [],
-            'points' => $user->points ?? 0,
+            'points' => $user->points ?? 0, // From database
+            'gameweek_points' => $user->gameweek_points ?? 0, // From database
+            'current_gameweek' => $user->current_gameweek ?? 1, // From database
             'free_transfers' => $user->free_transfers ?? 1,
             'budget_remaining' => $user->budget_remaining ?? 1000,
             'latest_points' => $squadPoints['total_points'] ?? 0,
-            'latest_gameweek' => $squadPoints['gameweek_name'] ?? null,
+            'latest_gameweek' => $latestGameweekId,
         ];
 
-        return view('dashboard', compact('user', 'teamData', 'squadPoints', 'currentGameweek'));
+        // Fetch latest FPL news (6 items from RSS feeds)
+        $fplNews = $this->newsService->getLatestNews(6);
+
+        return view('dashboard', compact('user', 'teamData', 'squadPoints', 'currentGameweek', 'fplNews'));
     }
 
     private function getPlayersByPosition($position)
@@ -229,10 +246,47 @@ class SquadController extends Controller
             $user = Auth::user();
             $playerIds = $bestSquad->pluck('fpl_id')->toArray();
 
+            // Split into starting XI (11 players) and bench (4 players)
+            // Auto-pick uses 4-4-2 formation: 1 GK + 4 DEF + 4 MID + 2 FWD = 11 starting
+            $squadByPosition = [
+                'gk' => $bestSquad->where('position', 'Goalkeeper')->take(2),
+                'def' => $bestSquad->where('position', 'Defender')->take(5),
+                'mid' => $bestSquad->where('position', 'Midfielder')->take(5),
+                'fwd' => $bestSquad->where('position', 'Forward')->take(3)
+            ];
+
+            // Build starting XI (4-4-2 formation)
+            $startingXI = collect()
+                ->merge($squadByPosition['gk']->take(1))     // 1 GK
+                ->merge($squadByPosition['def']->take(4))    // 4 DEF
+                ->merge($squadByPosition['mid']->take(4))    // 4 MID
+                ->merge($squadByPosition['fwd']->take(2))    // 2 FWD
+                ->pluck('fpl_id')->toArray();
+
+            // Build bench (4 players)
+            $bench = collect()
+                ->merge($squadByPosition['gk']->slice(1, 1)) // 1 backup GK
+                ->merge($squadByPosition['def']->slice(4, 1)) // 1 bench DEF
+                ->merge($squadByPosition['mid']->slice(4, 1)) // 1 bench MID
+                ->merge($squadByPosition['fwd']->slice(2, 1)) // 1 bench FWD
+                ->pluck('fpl_id')->toArray();
+
+            // Validate counts
+            if (count($startingXI) !== 11 || count($bench) !== 4) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Auto-pick failed to create valid team composition'
+                ]);
+            }
+
+            $fullSquad = array_merge($startingXI, $bench);
+
             \Log::info('Auto-pick saving squad for user:', [
                 'user_id' => $user->id,
                 'user_name' => $user->name,
-                'player_ids' => $playerIds,
+                'starting_xi' => $startingXI,
+                'bench' => $bench,
+                'total_players' => count($fullSquad),
                 'total_cost' => $totalCost,
                 'budget_remaining' => (1000 - $totalCost) / 10
             ]);
@@ -241,9 +295,9 @@ class SquadController extends Controller
                 $user->update([
                     'has_selected_squad' => true,
                     'squad_completed' => true,
-                    'team_name' => $user->name . "'s Auto Squad",
                     'budget_remaining' => (1000 - $totalCost) / 10,
-                    'starting_xi' => $playerIds,
+                    'selected_squad' => $fullSquad,        // All 15 players
+                    'starting_xi' => $startingXI,          // Exactly 11 players
                     'formation' => '4-4-2'
                 ]);
 
@@ -398,74 +452,36 @@ class SquadController extends Controller
     {
         $user = Auth::user();
 
-        // Get user's actual selected team
-        $startingXI = $user->starting_xi ?? [];
+        // Use helper to get full squad with auto-generation
+        $squadData = $this->getUserFullSquad($user);
 
-        // Ensure it's always an array (handle both JSON string and array cases)
-        if (is_string($startingXI)) {
-            $startingXI = json_decode($startingXI, true) ?? [];
-        }
-
-        if (empty($startingXI)) {
+        if (empty($squadData['fullSquad'])) {
             // If no team selected yet, redirect to pick team
             return redirect()->route('pick.team')->with('message', 'Please select your team first');
         }
 
-        // Get the actual players from the starting XI
-        $selectedPlayers = DB::table('players')
-            ->join('teams', 'players.team_code', '=', 'teams.fpl_code')
-            ->leftJoin('player_stats', function($join) {
-                $join->on('players.fpl_id', '=', 'player_stats.player_id')
-                     ->where('player_stats.gameweek', '=', 3);
-            })
-            ->select(
-                'players.*',
-                'teams.name as team_name',
-                'teams.short_name as team_short',
-                'teams.fpl_code as team_id',
-                'player_stats.now_cost',
-                'player_stats.total_points',
-                'player_stats.selected_by_percent',
-                'player_stats.form'
-            )
-            ->whereIn('players.fpl_id', $startingXI)
-            ->get();
+        // Get starting XI and bench player IDs
+        $startingXIIds = $squadData['startingXI'];
+        $benchIds = $squadData['bench'];
 
-        // Add jersey URLs to each player
-        foreach ($selectedPlayers as $player) {
-            $player->jersey_url = $this->getJerseyUrl($player->team_id);
-            $player->price = $player->now_cost ? $player->now_cost / 10 : 0; // Convert to proper price format
-        }
+        // Separate starting XI players from bench players
+        $startingPlayers = $squadData['players']->whereIn('fpl_id', $startingXIIds);
+        $benchPlayers = $squadData['players']->whereIn('fpl_id', $benchIds);
 
-        // Get substitute players (top players not in starting XI)
-        $substituteGK = $this->getTopPlayersByPosition('Goalkeeper', 3)
-            ->whereNotIn('fpl_id', $startingXI)->first();
-        $substituteDEF = $this->getTopPlayersByPosition('Defender', 6)
-            ->whereNotIn('fpl_id', $startingXI)->first();
-        $substituteMID = $this->getTopPlayersByPosition('Midfielder', 6)
-            ->whereNotIn('fpl_id', $startingXI)->first();
-        $substituteFWD = $this->getTopPlayersByPosition('Forward', 4)
-            ->whereNotIn('fpl_id', $startingXI)->first();
-
-        // Group players by position for the squad view
-        $startingPlayers = [
-            'goalkeepers' => $selectedPlayers->where('position', 'Goalkeeper')->values(),
-            'defenders' => $selectedPlayers->where('position', 'Defender')->values(),
-            'midfielders' => $selectedPlayers->where('position', 'Midfielder')->values(),
-            'forwards' => $selectedPlayers->where('position', 'Forward')->values()
+        // Group ONLY starting XI players by position for pitch display
+        $squad = [
+            'goalkeepers' => $startingPlayers->where('position', 'Goalkeeper')->values(),
+            'defenders' => $startingPlayers->where('position', 'Defender')->values(),
+            'midfielders' => $startingPlayers->where('position', 'Midfielder')->values(),
+            'forwards' => $startingPlayers->where('position', 'Forward')->values()
         ];
 
-        // Create full squad with substitutes at correct positions
-        $allGoalkeepers = collect([$startingPlayers['goalkeepers']->first(), $substituteGK])->filter()->values();
-        $allDefenders = $startingPlayers['defenders']->push($substituteDEF)->filter()->values();
-        $allMidfielders = $startingPlayers['midfielders']->push($substituteMID)->filter()->values();
-        $allForwards = $startingPlayers['forwards']->push($substituteFWD)->filter()->values();
-
-        $squad = [
-            'goalkeepers' => $allGoalkeepers,
-            'defenders' => $allDefenders,
-            'midfielders' => $allMidfielders,
-            'forwards' => $allForwards
+        // Group bench players by position for substitutes section
+        $benchSquad = [
+            'goalkeepers' => $benchPlayers->where('position', 'Goalkeeper')->values(),
+            'defenders' => $benchPlayers->where('position', 'Defender')->values(),
+            'midfielders' => $benchPlayers->where('position', 'Midfielder')->values(),
+            'forwards' => $benchPlayers->where('position', 'Forward')->values()
         ];
 
         // Get additional team data
@@ -476,7 +492,11 @@ class SquadController extends Controller
             'active_chip' => $user->active_chip,
         ];
 
-        return view('squad.view', compact('squad', 'user', 'teamData'));
+        // Get the NEXT gameweek (upcoming one) for display
+        $nextGameweek = DB::table('gameweeks')->where('is_next', true)->first()
+            ?? DB::table('gameweeks')->where('finished', false)->orderBy('gameweek_id')->first();
+
+        return view('squad.view', compact('squad', 'benchSquad', 'user', 'teamData', 'nextGameweek'));
     }
 
     private function getTopPlayersByPosition($position, $limit)
@@ -508,22 +528,38 @@ class SquadController extends Controller
             });
     }
 
-    public function pickTeam()
+    /**
+     * Helper method to get user's full squad (15 players) with auto-generation if needed
+     * Returns array with 'fullSquad', 'startingXI', 'bench', and 'players' (loaded objects)
+     */
+    private function getUserFullSquad($user)
     {
-        $user = Auth::user();
-
-        // Get user's starting XI
         $startingXI = $user->starting_xi ?? [];
+        $fullSquad = $user->selected_squad ?? [];
 
-        // Ensure it's always an array (handle both JSON string and array cases)
+        // Ensure they're always arrays
         if (is_string($startingXI)) {
             $startingXI = json_decode($startingXI, true) ?? [];
         }
 
-        // If user has a saved squad, load those specific players
-        if (!empty($startingXI)) {
-            // Get the user's actual selected players
-            $selectedPlayers = DB::table('players')
+        if (is_string($fullSquad)) {
+            $fullSquad = json_decode($fullSquad, true) ?? [];
+        }
+
+        // Auto-generate bench if missing
+        if (!empty($startingXI) && (empty($fullSquad) || count($fullSquad) < 15)) {
+            $fullSquad = $this->ensureFullSquad($user, $startingXI, $fullSquad);
+        }
+
+        // Calculate bench
+        $bench = !empty($fullSquad) && !empty($startingXI)
+            ? array_values(array_diff($fullSquad, $startingXI))
+            : [];
+
+        // Load player objects if we have a squad
+        $players = null;
+        if (!empty($fullSquad)) {
+            $players = DB::table('players')
                 ->join('teams', 'players.team_code', '=', 'teams.fpl_code')
                 ->leftJoin('player_stats', function($join) {
                     $join->on('players.fpl_id', '=', 'player_stats.player_id')
@@ -539,21 +575,101 @@ class SquadController extends Controller
                     'player_stats.selected_by_percent',
                     'player_stats.form'
                 )
-                ->whereIn('players.fpl_id', $startingXI)
+                ->whereIn('players.fpl_id', $fullSquad)
                 ->get();
 
             // Add jersey URLs and price formatting
-            foreach ($selectedPlayers as $player) {
+            foreach ($players as $player) {
                 $player->jersey_url = $this->getJerseyUrl($player->team_id);
                 $player->price = $player->now_cost ? $player->now_cost / 10 : 0;
             }
+        }
 
+        return [
+            'fullSquad' => $fullSquad,
+            'startingXI' => $startingXI,
+            'bench' => $bench,
+            'players' => $players
+        ];
+    }
+
+    /**
+     * Ensure user has 15 players (auto-generate bench if needed)
+     */
+    private function ensureFullSquad($user, $startingXI, $fullSquad)
+    {
+        if (count($fullSquad) >= 15) {
+            return $fullSquad;
+        }
+
+        $neededPlayers = 15 - count($fullSquad);
+        $existingIds = !empty($fullSquad) ? $fullSquad : $startingXI;
+        $benchPlayers = [];
+
+        // Get current position counts
+        if (!empty($existingIds)) {
+            $currentPlayers = DB::table('players')
+                ->whereIn('fpl_id', $existingIds)
+                ->select('fpl_id', 'position')
+                ->get();
+
+            $positionCounts = [
+                'Goalkeeper' => $currentPlayers->where('position', 'Goalkeeper')->count(),
+                'Defender' => $currentPlayers->where('position', 'Defender')->count(),
+                'Midfielder' => $currentPlayers->where('position', 'Midfielder')->count(),
+                'Forward' => $currentPlayers->where('position', 'Forward')->count()
+            ];
+
+            // Add bench GK if needed (should have 2 GKs total)
+            if ($positionCounts['Goalkeeper'] < 2 && count($benchPlayers) < $neededPlayers) {
+                $gk = $this->getTopPlayersByPosition('Goalkeeper', 5)
+                    ->whereNotIn('fpl_id', $existingIds)
+                    ->first();
+                if ($gk) {
+                    $benchPlayers[] = $gk->fpl_id;
+                    $existingIds[] = $gk->fpl_id;
+                }
+            }
+
+            // Fill remaining spots with best available players
+            foreach (['Defender', 'Midfielder', 'Forward'] as $pos) {
+                if (count($benchPlayers) >= $neededPlayers) break;
+
+                $player = $this->getTopPlayersByPosition($pos, 10)
+                    ->whereNotIn('fpl_id', $existingIds)
+                    ->first();
+
+                if ($player) {
+                    $benchPlayers[] = $player->fpl_id;
+                    $existingIds[] = $player->fpl_id;
+                }
+            }
+        }
+
+        // Create full squad
+        $fullSquad = empty($fullSquad) ? array_merge($startingXI, $benchPlayers) : array_merge($fullSquad, $benchPlayers);
+
+        // Save to database
+        $user->selected_squad = $fullSquad;
+        $user->save();
+
+        return $fullSquad;
+    }
+
+    public function pickTeam()
+    {
+        $user = Auth::user();
+
+        // Use helper to get full squad with auto-generation
+        $squadData = $this->getUserFullSquad($user);
+
+        if ($squadData['players']) {
             // Group selected players by position
             $squad = [
-                'goalkeepers' => $selectedPlayers->where('position', 'Goalkeeper')->values(),
-                'defenders' => $selectedPlayers->where('position', 'Defender')->values(),
-                'midfielders' => $selectedPlayers->where('position', 'Midfielder')->values(),
-                'forwards' => $selectedPlayers->where('position', 'Forward')->values()
+                'goalkeepers' => $squadData['players']->where('position', 'Goalkeeper')->values(),
+                'defenders' => $squadData['players']->where('position', 'Defender')->values(),
+                'midfielders' => $squadData['players']->where('position', 'Midfielder')->values(),
+                'forwards' => $squadData['players']->where('position', 'Forward')->values()
             ];
         } else {
             // If no saved squad, load top players for selection
@@ -566,7 +682,8 @@ class SquadController extends Controller
         }
 
         $teamData = [
-            'starting_xi' => $startingXI,
+            'starting_xi' => $squadData['startingXI'],
+            'bench' => $squadData['bench'],
             'captain_id' => $user->captain_id,
             'vice_captain_id' => $user->vice_captain_id,
             'formation' => $user->formation ?? '4-4-2',
@@ -577,13 +694,19 @@ class SquadController extends Controller
             'budget_remaining' => $user->budget_remaining ?? 1000,
         ];
 
-        return view('pick-team', compact('squad', 'user', 'teamData'));
+        // Get next gameweek for deadline display
+        $nextGameweek = DB::table('gameweeks')
+            ->where('is_next', true)
+            ->first();
+
+        return view('pick-team', compact('squad', 'user', 'teamData', 'nextGameweek'));
     }
 
     public function saveTeamSelection(Request $request)
     {
         $request->validate([
             'starting_xi' => 'required|array|size:11',
+            'bench' => 'nullable|array|max:4', // Make bench optional and allow 0-4 players
             'captain' => 'required',
             'vice_captain' => 'required',
             'formation' => 'required|string',
@@ -593,9 +716,40 @@ class SquadController extends Controller
         $user = Auth::user();
 
         try {
+            // Get bench data (default to empty array if not provided)
+            $bench = $request->bench ?? [];
+
+            // Ensure starting XI has exactly 11 players
+            if (count($request->starting_xi) !== 11) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Starting XI must have exactly 11 players'
+                ], 400);
+            }
+
+            // Ensure bench has max 4 players
+            if (count($bench) > 4) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Bench cannot have more than 4 players'
+                ], 400);
+            }
+
+            // Combine starting XI and bench for full squad (should be 11-15 players total)
+            $fullSquad = array_merge($request->starting_xi, $bench);
+
+            // Ensure no duplicate players
+            if (count($fullSquad) !== count(array_unique($fullSquad))) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Players cannot appear in both starting XI and bench'
+                ], 400);
+            }
+
             // Update user's team selection
             $user->update([
-                'starting_xi' => $request->starting_xi,
+                'selected_squad' => $fullSquad, // All players (11-15)
+                'starting_xi' => $request->starting_xi, // Exactly 11 starting players
                 'captain_id' => $request->captain,
                 'vice_captain_id' => $request->vice_captain,
                 'formation' => $request->formation,
@@ -619,75 +773,24 @@ class SquadController extends Controller
     {
         $user = Auth::user();
 
-        // Get user's actual selected team (same as viewSquad method)
-        $startingXI = $user->starting_xi ?? [];
+        // Use helper to get full squad with auto-generation
+        $squadData = $this->getUserFullSquad($user);
 
-        // Ensure it's always an array (handle both JSON string and array cases)
-        if (is_string($startingXI)) {
-            $startingXI = json_decode($startingXI, true) ?? [];
-        }
-
-        if (empty($startingXI)) {
+        if (empty($squadData['fullSquad'])) {
             // If no team selected yet, redirect to pick team
-            return redirect()->route('squad.selection')->with('message', 'Please select your team first');
+            return redirect()->route('pick.team')->with('message', 'Please select your team first');
         }
 
-        // Get the actual players from the starting XI (same query as viewSquad)
-        $selectedPlayers = DB::table('players')
-            ->join('teams', 'players.team_code', '=', 'teams.fpl_code')
-            ->leftJoin('player_stats', function($join) {
-                $join->on('players.fpl_id', '=', 'player_stats.player_id')
-                     ->where('player_stats.gameweek', '=', 3);
-            })
-            ->select(
-                'players.*',
-                'teams.name as team_name',
-                'teams.short_name as team_short',
-                'teams.fpl_code as team_id',
-                'player_stats.now_cost',
-                'player_stats.total_points',
-                'player_stats.selected_by_percent',
-                'player_stats.form'
-            )
-            ->whereIn('players.fpl_id', $startingXI)
-            ->get();
-
-        // Add jersey URLs and price formatting to each player
-        foreach ($selectedPlayers as $player) {
-            $player->jersey_url = $this->getJerseyUrl($player->team_id);
-            $player->price = $player->now_cost ? $player->now_cost / 10 : 0; // Convert to proper price format
-        }
-
-        // Get substitute players (same logic as viewSquad)
-        $substituteGK = $this->getTopPlayersByPosition('Goalkeeper', 3)
-            ->whereNotIn('fpl_id', $startingXI)->first();
-        $substituteDEF = $this->getTopPlayersByPosition('Defender', 6)
-            ->whereNotIn('fpl_id', $startingXI)->first();
-        $substituteMID = $this->getTopPlayersByPosition('Midfielder', 6)
-            ->whereNotIn('fpl_id', $startingXI)->first();
-        $substituteFWD = $this->getTopPlayersByPosition('Forward', 4)
-            ->whereNotIn('fpl_id', $startingXI)->first();
-
-        // Group players by position for the squad view (same as viewSquad)
+        // Group all players by position
         $startingPlayers = [
-            'goalkeepers' => $selectedPlayers->where('position', 'Goalkeeper')->values(),
-            'defenders' => $selectedPlayers->where('position', 'Defender')->values(),
-            'midfielders' => $selectedPlayers->where('position', 'Midfielder')->values(),
-            'forwards' => $selectedPlayers->where('position', 'Forward')->values()
+            'goalkeepers' => $squadData['players']->where('position', 'Goalkeeper')->values(),
+            'defenders' => $squadData['players']->where('position', 'Defender')->values(),
+            'midfielders' => $squadData['players']->where('position', 'Midfielder')->values(),
+            'forwards' => $squadData['players']->where('position', 'Forward')->values()
         ];
 
-        // Create full squad with substitutes at correct positions (same as viewSquad)
-        $allGoalkeepers = collect([$startingPlayers['goalkeepers']->first(), $substituteGK])->filter()->values();
-        $allDefenders = $startingPlayers['defenders']->push($substituteDEF)->filter()->values();
-        $allMidfielders = $startingPlayers['midfielders']->push($substituteMID)->filter()->values();
-        $allForwards = $startingPlayers['forwards']->push($substituteFWD)->filter()->values();
-
-        $currentSquad = [
-            'goalkeepers' => $allGoalkeepers,
-            'defenders' => $allDefenders,
-            'midfielders' => $allMidfielders,
-            'forwards' => $allForwards
-        ];
+        // Current squad is the same as starting players (all 15 players for transfers)
+        $currentSquad = $startingPlayers;
 
         // Get all available players for transfers (remove the ->take(10) limit)
         $allPlayers = [
@@ -849,5 +952,30 @@ class SquadController extends Controller
         $fwd = $players->get('Forward', collect())->count();
 
         return $gk === 2 && $def === 5 && $mid === 5 && $fwd === 3;
+    }
+
+    /**
+     * Update user's gameweek points and current gameweek
+     */
+    public function updateUserGameweekPoints($userId, $gameweekId, $points)
+    {
+        $user = User::find($userId);
+
+        if (!$user) {
+            return false;
+        }
+
+        // Update current gameweek
+        $user->current_gameweek = $gameweekId;
+
+        // Update gameweek points
+        $user->gameweek_points = $points;
+
+        // Update total points (add to existing)
+        $user->points = ($user->points ?? 0) + $points;
+
+        $user->save();
+
+        return true;
     }
 }

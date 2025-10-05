@@ -43,10 +43,13 @@ class FixturesController extends Controller
             ->orderBy('gameweek_id', 'asc')
             ->first();
 
+        // Get gameweek data for deadline
+        $gameweekData = \App\Models\Gameweek::where('gameweek_id', $currentGameweek)->first();
+
         // Get fixtures for current gameweek
         $fixtures = $this->getFixturesForGameweek($currentGameweek);
 
-        return view('fixtures.index', compact('fixtures', 'currentGameweek', 'previousGameweek', 'nextGameweek'));
+        return view('fixtures.index', compact('fixtures', 'currentGameweek', 'previousGameweek', 'nextGameweek', 'gameweekData'));
     }    private function getFixturesForGameweek($gameweek)
     {
         // Try to get from fixtures table first
