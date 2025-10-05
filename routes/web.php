@@ -42,6 +42,24 @@ Route::get('/refresh-data', function () {
     }
 })->name('refresh.data');
 
+// Manual gameweek status update route (for development/admin use)
+Route::get('/update-gameweek-status', function () {
+    try {
+        Artisan::call('gameweek:update-status');
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Gameweek status updated successfully!',
+            'output' => Artisan::output()
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Error updating gameweek status: ' . $e->getMessage()
+        ], 500);
+    }
+})->name('update.gameweek.status');
+
 // Authentication Routes
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);

@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Auto-seed FPL data when database is empty
         $middleware->web(append: [
             \App\Http\Middleware\AutoSeedFPLData::class,
+            // \App\Http\Middleware\AutoUpdateGameweekStatus::class, // Disabled - needs fixing
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

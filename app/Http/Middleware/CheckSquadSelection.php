@@ -18,8 +18,8 @@ class CheckSquadSelection
     {
         if (Auth::check() && !Auth::user()->has_selected_squad) {
             // User is logged in but hasn't selected a squad
-            if (!$request->routeIs('squad.*') && !$request->routeIs('logout')) {
-                return redirect()->route('squad.selection');
+            if (!$request->routeIs('squad.*') && !$request->routeIs('pick.team') && !$request->routeIs('logout')) {
+                return redirect()->route('pick.team');
             }
         }
 

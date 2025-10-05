@@ -291,25 +291,10 @@ class SquadController extends Controller
                 'budget_remaining' => (1000 - $totalCost) / 10
             ]);
 
-            try {
-                $user->update([
-                    'has_selected_squad' => true,
-                    'squad_completed' => true,
-                    'budget_remaining' => (1000 - $totalCost) / 10,
-                    'selected_squad' => $fullSquad,        // All 15 players
-                    'starting_xi' => $startingXI,          // Exactly 11 players
-                    'formation' => '4-4-2'
-                ]);
+            // Don't save to database yet - let user review and save with team name
+            // Just return the generated squad data for frontend to display
 
-                \Log::info('Auto-pick squad saved successfully for user:', ['user_id' => $user->id]);
-
-            } catch (\Exception $e) {
-                \Log::error('Error saving auto-pick squad:', [
-                    'user_id' => $user->id,
-                    'error' => $e->getMessage()
-                ]);
-                throw $e;
-            }
+            \Log::info('Auto-pick squad generated for user (not saved yet):', ['user_id' => $user->id]);
 
             // Convert to the format expected by frontend
             $squad = $bestSquad->map(function($player) {
@@ -331,9 +316,9 @@ class SquadController extends Controller
                 'squad' => $squad,
                 'total_cost' => $totalCost / 10,
                 'budget_remaining' => (1000 - $totalCost) / 10,
-                'message' => sprintf('Squad auto-picked and saved! £%.1fm used, £%.1fm remaining',
-                    $totalCost / 10, (1000 - $totalCost) / 10),
-                'redirect' => route('dashboard')
+                'message' => sprintf('Squad auto-picked! Now set your team name and save. £%.1fm used, £%.1fm remaining',
+                    $totalCost / 10, (1000 - $totalCost) / 10)
+                // No redirect - stay on current page
             ]);
 
         } catch (\Exception $e) {

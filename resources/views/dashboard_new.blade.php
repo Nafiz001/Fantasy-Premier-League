@@ -4,12 +4,12 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Fantasy Premier League - Dashboard</title>
-    
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -26,8 +26,8 @@
         }
     </script>
     <style>
-        body { 
-            font-family: 'Inter', sans-serif; 
+        body {
+            font-family: 'Inter', sans-serif;
             background: linear-gradient(135deg, #38003c 0%, #e90052 50%, #00ff85 100%);
             min-height: 100vh;
         }
@@ -44,7 +44,7 @@
                     </div>
                     <span class="text-lg font-bold text-fpl-purple">Fantasy</span>
                 </div>
-                
+
                 <!-- Full Navigation Menu -->
                 <nav class="hidden md:flex items-center space-x-8">
                     <a href="{{ route('dashboard') }}" class="text-fpl-purple hover:text-fpl-magenta font-medium transition-colors">My Team</a>
@@ -120,7 +120,7 @@
                             <h3 class="font-semibold text-gray-900">Your Squad</h3>
                             <a href="#" class="text-sm text-fpl-purple hover:text-fpl-magenta">View full team</a>
                         </div>
-                        
+
                         <div class="text-center py-8">
                             <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <span class="text-gray-400 text-2xl">⚽</span>
