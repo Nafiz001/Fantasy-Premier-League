@@ -134,13 +134,6 @@ Route::middleware(['auth', \App\Http\Middleware\CheckSquadSelection::class])->gr
     Route::get('/fpl/aggregates', [FPLAnalysisController::class, 'aggregateFunctions'])->name('fpl.aggregates');
     Route::post('/fpl/views', [FPLAnalysisController::class, 'manageViews'])->name('fpl.views');
 
-    // Advanced Analysis Routes
-    Route::get('/fpl/captains/{gameweek?}', [FPLAnalysisController::class, 'captainRecommendations'])->name('fpl.captains');
-    Route::get('/fpl/differentials', [FPLAnalysisController::class, 'differentialPlayers'])->name('fpl.differentials');
-    Route::get('/fpl/clean-sheets/{gameweek?}', [FPLAnalysisController::class, 'cleanSheetProbabilities'])->name('fpl.clean-sheets');
-    Route::get('/fpl/transfers', [FPLAnalysisController::class, 'transferRecommendations'])->name('fpl.transfers');
-    Route::get('/fpl/fixtures', [FPLAnalysisController::class, 'fixtureDifficulty'])->name('fpl.fixtures');
-
     // Query Explorer
     Route::post('/fpl/query', [FPLAnalysisController::class, 'queryExplorer'])->name('fpl.query');
     Route::get('/fpl/schema', [FPLAnalysisController::class, 'schemaInfo'])->name('fpl.schema');

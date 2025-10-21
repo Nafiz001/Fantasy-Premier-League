@@ -39,9 +39,7 @@
         <div class="max-w-7xl mx-auto px-4">
             <div class="flex items-center justify-between h-16">
                 <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 bg-fpl-purple rounded-full flex items-center justify-center">
-                        <span class="text-white font-bold text-lg">F</span>
-                    </div>
+                    <img src="/logo.png" alt="Fantasy Premier League Logo" class="w-10 h-10 rounded-full">
                     <span class="text-lg font-bold text-fpl-purple">Fantasy</span>
                 </div>
 
@@ -52,7 +50,6 @@
                     <a href="{{ route('fpl.dashboard') }}" class="text-gray-700 hover:text-fpl-purple font-medium transition-colors">Statistics</a>
                     <a href="{{ route('fixtures') }}" class="text-gray-700 hover:text-fpl-purple font-medium transition-colors">Fixtures</a>
                     <a href="#" class="text-gray-700 hover:text-fpl-purple font-medium transition-colors">Leagues</a>
-                    <a href="#" class="text-gray-700 hover:text-fpl-purple font-medium transition-colors">More</a>
                 </nav>
 
                 <div class="flex items-center space-x-4">
@@ -129,29 +126,6 @@
                             <p class="text-sm text-gray-500 mt-1">15 players selected</p>
                         </div>
                     </div>
-
-                    <!-- Quick Actions -->
-                    <div class="bg-white/95 backdrop-blur-sm rounded-lg p-6">
-                        <h3 class="font-semibold text-gray-900 mb-4">Quick Actions</h3>
-                        <div class="grid grid-cols-2 gap-4">
-                            <a href="#" class="p-4 border-2 border-dashed border-gray-300 rounded-lg text-center hover:border-fpl-green transition-colors">
-                                <div class="text-2xl mb-2">🔄</div>
-                                <div class="text-sm font-medium">Make Transfers</div>
-                            </a>
-                            <a href="#" class="p-4 border-2 border-dashed border-gray-300 rounded-lg text-center hover:border-fpl-green transition-colors">
-                                <div class="text-2xl mb-2">📊</div>
-                                <div class="text-sm font-medium">View Statistics</div>
-                            </a>
-                            <a href="#" class="p-4 border-2 border-dashed border-gray-300 rounded-lg text-center hover:border-fpl-green transition-colors">
-                                <div class="text-2xl mb-2">🏆</div>
-                                <div class="text-sm font-medium">Join Leagues</div>
-                            </a>
-                            <a href="{{ route('fpl.dashboard') }}" class="p-4 border-2 border-dashed border-gray-300 rounded-lg text-center hover:border-fpl-green transition-colors">
-                                <div class="text-2xl mb-2">🔍</div>
-                                <div class="text-sm font-medium">Analysis Hub</div>
-                            </a>
-                        </div>
-                    </div>
                 </div>
 
                 <!-- Sidebar -->
@@ -178,25 +152,6 @@
                                 <div class="font-medium text-gray-900">Pro Tip</div>
                                 <div class="text-gray-600 text-xs mt-1">Check fixture difficulty before making transfers.</div>
                             </div>
-                        </div>
-                    </div>
-
-                    <!-- Links to Other Features -->
-                    <div class="bg-white/95 backdrop-blur-sm rounded-lg p-6">
-                        <h3 class="font-semibold text-gray-900 mb-4">Advanced Features</h3>
-                        <div class="space-y-3">
-                            <a href="{{ route('fpl.data.dashboard') }}" class="block text-sm text-fpl-purple hover:text-fpl-magenta">
-                                📊 Data Management
-                            </a>
-                            <a href="{{ route('fpl.captains') }}" class="block text-sm text-fpl-purple hover:text-fpl-magenta">
-                                👑 Captain Picks
-                            </a>
-                            <a href="{{ route('fpl.differentials') }}" class="block text-sm text-fpl-purple hover:text-fpl-magenta">
-                                🎯 Differential Players
-                            </a>
-                            <a href="{{ route('fpl.transfers') }}" class="block text-sm text-fpl-purple hover:text-fpl-magenta">
-                                🔄 Transfer Suggestions
-                            </a>
                         </div>
                     </div>
                 </div>

@@ -4,12 +4,12 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Fantasy Premier League</title>
-    
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -29,6 +29,94 @@
         body { font-family: 'Inter', sans-serif; }
         .hero-gradient { background: linear-gradient(135deg, #38003c 0%, #e90052 50%, #00ff85 100%); }
         .card-hover:hover { transform: translateY(-8px); transition: all 0.4s ease; }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            width: 90%;
+            max-width: 900px;
+            max-height: 90%;
+            position: relative;
+            transform: scale(0.7);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: -15px;
+            right: -15px;
+            width: 40px;
+            height: 40px;
+            background: #38003c;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 20px;
+            border: none;
+            z-index: 1001;
+        }
+
+        .video-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            height: 0;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100% !important;
+            height: 100% !important;
+            border: none;
+            border-radius: 8px;
+            display: block;
+        }
+
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 18px;
+            z-index: 10;
+        }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -63,7 +151,7 @@
                 <a href="/signup" class="bg-fpl-green text-fpl-purple px-8 py-4 rounded-full font-bold text-lg hover:bg-opacity-90 transition-all duration-200">
                     Start Playing Now
                 </a>
-                <button class="border-2 border-white text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-white hover:text-fpl-purple transition-all duration-200">
+                <button id="watch-how-to-play-btn" class="border-2 border-white text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-white hover:text-fpl-purple transition-all duration-200">
                     Watch How to Play
                 </button>
             </div>
@@ -79,7 +167,7 @@
                     Join millions of managers in the ultimate fantasy football experience
                 </p>
             </div>
-            
+
             <div class="grid md:grid-cols-3 gap-8">
                 <!-- Feature 1 -->
                 <div class="bg-white p-8 rounded-2xl shadow-lg card-hover border border-gray-100">
@@ -124,5 +212,86 @@
             <p class="text-gray-400 text-xs">&copy; 2024 Fantasy Premier League. All rights reserved.</p>
         </div>
     </footer>
+
+    <!-- YouTube Video Modal -->
+    <div id="video-modal" class="modal-overlay">
+        <div class="modal-content">
+            <button id="modal-close" class="modal-close">&times;</button>
+            <div class="video-container">
+                <div id="video-loading" class="video-loading">Loading video...</div>
+                <iframe id="youtube-video"
+                        src=""
+                        title="How to Play Fantasy Premier League"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowfullscreen
+                        loading="lazy"
+                        referrerpolicy="strict-origin-when-cross-origin">
+                </iframe>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Modal functionality
+        const modal = document.getElementById('video-modal');
+        const modalClose = document.getElementById('modal-close');
+        const watchBtn = document.getElementById('watch-how-to-play-btn');
+        const youtubeVideo = document.getElementById('youtube-video');
+        const videoLoading = document.getElementById('video-loading');
+
+        // YouTube video ID
+        const videoId = 'xYWmhnsOqs0';
+
+        // Open modal and load video
+        watchBtn.addEventListener('click', function() {
+            // Show loading indicator
+            videoLoading.style.display = 'block';
+
+            // Load video
+            const embedUrl = `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&showinfo=0&fs=1&iv_load_policy=3&cc_load_policy=0&disablekb=1`;
+            youtubeVideo.src = embedUrl;
+
+            // Show modal
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+
+            // Hide loading after video loads
+            youtubeVideo.onload = function() {
+                videoLoading.style.display = 'none';
+            };
+
+            // Fallback: hide loading after 3 seconds
+            setTimeout(() => {
+                videoLoading.style.display = 'none';
+            }, 3000);
+        });
+
+        // Close modal
+        modalClose.addEventListener('click', function() {
+            closeModal();
+        });
+
+        // Close modal when clicking outside
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+
+        // Close modal function
+        function closeModal() {
+            modal.classList.remove('active');
+            youtubeVideo.src = ''; // Stop video
+            videoLoading.style.display = 'none'; // Hide loading
+            document.body.style.overflow = 'auto'; // Restore scrolling
+        }
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && modal.classList.contains('active')) {
+                closeModal();
+            }
+        });
+    </script>
 </body>
 </html>

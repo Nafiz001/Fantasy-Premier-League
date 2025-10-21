@@ -159,29 +159,6 @@
                             <p class="text-sm text-gray-500 mt-1">15 players selected</p>
                         </div>
                     </div>
-
-                    <!-- Quick Actions -->
-                    <div class="bg-white/95 backdrop-blur-sm rounded-lg p-6">
-                        <h3 class="font-semibold text-gray-900 mb-4">Quick Actions</h3>
-                        <div class="grid grid-cols-2 gap-4">
-                            <a href="#" class="p-4 border-2 border-dashed border-gray-300 rounded-lg text-center hover:border-fpl-green transition-colors">
-                                <div class="text-2xl mb-2">🔄</div>
-                                <div class="text-sm font-medium">Make Transfers</div>
-                            </a>
-                            <a href="#" class="p-4 border-2 border-dashed border-gray-300 rounded-lg text-center hover:border-fpl-green transition-colors">
-                                <div class="text-2xl mb-2">📊</div>
-                                <div class="text-sm font-medium">View Statistics</div>
-                            </a>
-                            <a href="#" class="p-4 border-2 border-dashed border-gray-300 rounded-lg text-center hover:border-fpl-green transition-colors">
-                                <div class="text-2xl mb-2">🏆</div>
-                                <div class="text-sm font-medium">Join Leagues</div>
-                            </a>
-                            <a href="{{ route('fpl.dashboard') }}" class="p-4 border-2 border-dashed border-gray-300 rounded-lg text-center hover:border-fpl-green transition-colors">
-                                <div class="text-2xl mb-2">🔍</div>
-                                <div class="text-sm font-medium">Analysis Hub</div>
-                            </a>
-                        </div>
-                    </div>
                 </div>
 
                 <!-- Sidebar -->
@@ -228,25 +205,6 @@
                                 <div class="text-sm text-gray-600 mb-3">Deadline: Sat 14 Sep, 16:00</div>
                                 <div class="text-xs text-gray-500">2 days, 14 hours remaining</div>
                             @endif
-                        </div>
-                    </div>
-
-                    <!-- Links to Other Features -->
-                    <div class="bg-white/95 backdrop-blur-sm rounded-lg p-6">
-                        <h3 class="font-semibold text-gray-900 mb-4">Advanced Features</h3>
-                        <div class="space-y-3">
-                            <a href="{{ route('fpl.data.dashboard') }}" class="block text-sm text-fpl-purple hover:text-fpl-magenta">
-                                📊 Data Management
-                            </a>
-                            <a href="{{ route('fpl.captains') }}" class="block text-sm text-fpl-purple hover:text-fpl-magenta">
-                                👑 Captain Picks
-                            </a>
-                            <a href="{{ route('fpl.differentials') }}" class="block text-sm text-fpl-purple hover:text-fpl-magenta">
-                                🎯 Differential Players
-                            </a>
-                            <a href="{{ route('fpl.transfers') }}" class="block text-sm text-fpl-purple hover:text-fpl-magenta">
-                                🔄 Transfer Suggestions
-                            </a>
                         </div>
                     </div>
                 </div>

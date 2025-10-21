@@ -5,12 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Pick Your Squad - Fantasy Premier League</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -29,8 +29,8 @@
         }
     </script>
     <style>
-        body { 
-            font-family: 'Inter', sans-serif; 
+        body {
+            font-family: 'Inter', sans-serif;
             background: linear-gradient(135deg, #38003c 0%, #e90052 50%, #00ff85 100%);
             min-height: 100vh;
         }
@@ -103,12 +103,10 @@
         <div class="max-w-7xl mx-auto px-4">
             <div class="flex items-center justify-between h-16">
                 <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 bg-fpl-purple rounded-full flex items-center justify-center">
-                        <span class="text-white font-bold text-lg">F</span>
-                    </div>
+                    <img src="/logo.png" alt="Fantasy Premier League Logo" class="w-10 h-10 rounded-full">
                     <span class="text-lg font-bold text-fpl-purple">Fantasy</span>
                 </div>
-                
+
                 <!-- Squad Selection Navigation -->
                 <nav class="hidden md:flex items-center space-x-8">
                     <a href="#" class="text-fpl-purple hover:text-fpl-magenta font-medium transition-colors">Pick Squad</a>
@@ -116,7 +114,6 @@
                     <a href="#" class="text-gray-500 cursor-not-allowed">Transfers</a>
                     <a href="#" class="text-gray-500 cursor-not-allowed">Statistics</a>
                     <a href="#" class="text-gray-500 cursor-not-allowed">Fantasy</a>
-                    <a href="#" class="text-gray-500 cursor-not-allowed">More</a>
                 </nav>
 
                 <div class="flex items-center space-x-4">
@@ -156,12 +153,12 @@
                     <!-- Team Name Input -->
                     <div class="bg-white/95 backdrop-blur-sm rounded-lg p-4">
                         <h3 class="font-semibold text-gray-900 mb-3">Squad Selection</h3>
-                        <input type="text" id="team-name" placeholder="Your team name" 
+                        <input type="text" id="team-name" placeholder="Your team name"
                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fpl-green focus:border-transparent">
                         <div class="mt-2 text-sm text-gray-500">Not selected</div>
-                        
+
                         <!-- Auto Pick Button -->
-                        <button id="auto-pick-btn" 
+                        <button id="auto-pick-btn"
                                 class="w-full mt-3 bg-fpl-magenta hover:bg-fpl-magenta/90 text-white font-semibold py-2 px-4 rounded-md transition-colors">
                             🎲 Auto Pick Squad
                         </button>
@@ -189,7 +186,7 @@
                         </div>
 
                         <!-- Search -->
-                        <input type="text" id="player-search" placeholder="Search for a player" 
+                        <input type="text" id="player-search" placeholder="Search for a player"
                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fpl-green focus:border-transparent mb-4">
 
                         <!-- Filters -->
@@ -349,13 +346,13 @@
                                         $deadline = new DateTime($nextGameweek->deadline_time);
                                         $now = new DateTime();
                                         $interval = $now->diff($deadline);
-                                        
+
                                         if ($interval->invert) {
                                             $timeRemaining = 'Deadline passed';
                                         } else {
                                             $days = $interval->days;
                                             $hours = $interval->h;
-                                            
+
                                             if ($days > 0) {
                                                 $timeRemaining = "{$days} day" . ($days > 1 ? 's' : '') . ", {$hours} hour" . ($hours > 1 ? 's' : '') . " remaining";
                                             } elseif ($hours > 0) {
@@ -388,7 +385,7 @@
             Midfielder: [],
             Forward: []
         };
-        
+
         let budget = 100.0;
         let allPlayers = @json($goalkeepers->concat($defenders)->concat($midfielders)->concat($forwards));
 
@@ -432,13 +429,13 @@
             let filteredPlayers = allPlayers.filter(player => {
                 // Position filter
                 if (position !== 'all' && player.position !== position) return false;
-                
+
                 // Search filter
                 if (search && !player.web_name.toLowerCase().includes(search)) return false;
-                
+
                 // Team filter
                 if (teamFilter && player.team_name !== teamFilter) return false;
-                
+
                 // Price filter
                 if (priceFilter) {
                     const price = player.price || 5.0;
@@ -447,7 +444,7 @@
                     if (priceFilter === '7-10' && (price <= 7.0 || price > 10.0)) return false;
                     if (priceFilter === '10+' && price <= 10.0) return false;
                 }
-                
+
                 return true;
             });
 
@@ -474,14 +471,14 @@
                 const div = document.createElement('div');
                 div.className = `player-card ${isSelected ? 'selected' : ''}`;
                 div.dataset.playerId = player.fpl_id;
-                
+
                 div.innerHTML = `
                     <div class="flex items-center justify-between">
                         <div class="flex-1">
                             <div class="flex items-center space-x-2">
                                 <div class="relative w-12 h-12 flex items-center justify-center">
-                                    <img src="https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_${player.team_id}-110.png" 
-                                         alt="${player.team_name} Jersey" 
+                                    <img src="https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_${player.team_id}-110.png"
+                                         alt="${player.team_name} Jersey"
                                          class="w-10 h-10 object-contain"
                                          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
                                     <div class="w-8 h-8 bg-gray-200 rounded-full hidden items-center justify-center text-xs font-bold">
@@ -549,7 +546,7 @@
             // Add player
             selectedSquad[position].push(player);
             budget -= playerPrice;
-            
+
             updateDisplay();
             loadPlayerList(); // Refresh to show selection
         }
@@ -558,7 +555,7 @@
             const position = player.position;
             selectedSquad[position] = selectedSquad[position].filter(p => p.fpl_id !== player.fpl_id);
             budget += (player.price || 5.0);
-            
+
             updateDisplay();
             loadPlayerList(); // Refresh to show deselection
         }
@@ -590,8 +587,8 @@
                     gkSlots[index].className = 'player-slot filled goalkeeper-slot';
                     gkSlots[index].innerHTML = `
                         <div class="flex flex-col items-center">
-                            <img src="https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_${player.team_id}-110.png" 
-                                 alt="${player.web_name}" 
+                            <img src="https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_${player.team_id}-110.png"
+                                 alt="${player.web_name}"
                                  class="w-8 h-8 object-contain mb-1"
                                  onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
                             <div class="w-6 h-6 bg-yellow-400 rounded-full hidden items-center justify-center text-xs font-bold">
@@ -610,8 +607,8 @@
                     defSlots[index].className = 'player-slot filled defender-slot';
                     defSlots[index].innerHTML = `
                         <div class="flex flex-col items-center">
-                            <img src="https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_${player.team_id}-110.png" 
-                                 alt="${player.web_name}" 
+                            <img src="https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_${player.team_id}-110.png"
+                                 alt="${player.web_name}"
                                  class="w-8 h-8 object-contain mb-1"
                                  onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
                             <div class="w-6 h-6 bg-blue-400 rounded-full hidden items-center justify-center text-xs font-bold">
@@ -630,8 +627,8 @@
                     midSlots[index].className = 'player-slot filled midfielder-slot';
                     midSlots[index].innerHTML = `
                         <div class="flex flex-col items-center">
-                            <img src="https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_${player.team_id}-110.png" 
-                                 alt="${player.web_name}" 
+                            <img src="https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_${player.team_id}-110.png"
+                                 alt="${player.web_name}"
                                  class="w-8 h-8 object-contain mb-1"
                                  onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
                             <div class="w-6 h-6 bg-green-400 rounded-full hidden items-center justify-center text-xs font-bold">
@@ -650,8 +647,8 @@
                     fwdSlots[index].className = 'player-slot filled forward-slot';
                     fwdSlots[index].innerHTML = `
                         <div class="flex flex-col items-center">
-                            <img src="https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_${player.team_id}-110.png" 
-                                 alt="${player.web_name}" 
+                            <img src="https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_${player.team_id}-110.png"
+                                 alt="${player.web_name}"
                                  class="w-8 h-8 object-contain mb-1"
                                  onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
                             <div class="w-6 h-6 bg-red-400 rounded-full hidden items-center justify-center text-xs font-bold">
@@ -713,7 +710,7 @@
         document.getElementById('auto-pick-btn').addEventListener('click', function() {
             this.disabled = true;
             this.innerHTML = '🔄 Generating Squad...';
-            
+
             fetch('{{ route("squad.auto-pick") }}', {
                 method: 'POST',
                 headers: {
@@ -732,12 +729,12 @@
                         Midfielder: [],
                         Forward: []
                     };
-                    
+
                     // Add auto-picked players to squad
                     data.squad.forEach(player => {
                         console.log('Adding player:', player); // Debug log
                         const position = player.position; // Use exact position name from backend
-                        
+
                         if (selectedSquad[position]) {
                             selectedSquad[position].push({
                                 fpl_id: player.id,
@@ -753,28 +750,28 @@
                             });
                         }
                     });
-                    
+
                     console.log('Final selectedSquad:', selectedSquad); // Debug log
                     console.log('Budget remaining:', data.budget_remaining); // Debug log
-                    
+
                     // Update budget
                     budget = data.budget_remaining;
                     document.getElementById('budget').textContent = budget.toFixed(1);
-                    
+
                     // Update squad display and counts
                     updateSquadDisplay();
-                    
+
                     // Show success message
-                    const message = data.message ? 
+                    const message = data.message ?
                         `${data.message}` :
                         `Auto-pick successful! Selected 15 players for £${data.total_cost.toFixed(1)}m`;
                     alert(message);
-                    
+
                     // Redirect to dashboard if provided
                     if (data.redirect) {
                         window.location.href = data.redirect;
                     }
-                    
+
                 } else {
                     alert('Error: ' + data.message);
                 }

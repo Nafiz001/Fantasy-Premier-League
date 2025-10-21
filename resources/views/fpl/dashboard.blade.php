@@ -59,7 +59,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
             <a class="navbar-brand" href="#">
-                <i class="fas fa-database me-2"></i>
+                <img src="/logo.png" alt="FPL Logo" class="me-2" style="height: 30px; width: auto;">
                 FPL Database Analysis Dashboard
             </a>
             <span class="navbar-text">
@@ -148,9 +148,9 @@
                                     <tr>
                                         <td class="fw-bold">{{ $player->web_name }}</td>
                                         <td>
-                                            <span class="badge 
+                                            <span class="badge
                                                 @if($player->position_full == 'Goalkeeper') bg-warning
-                                                @elseif($player->position_full == 'Defender') bg-success  
+                                                @elseif($player->position_full == 'Defender') bg-success
                                                 @elseif($player->position_full == 'Midfielder') bg-info
                                                 @else bg-danger
                                                 @endif position-badge">
@@ -165,9 +165,9 @@
                                         <td>£{{ number_format($player->cost_millions, 1) }}</td>
                                         <td>{{ number_format($player->selected_by_percent, 1) }}%</td>
                                         <td>
-                                            <div class="form-indicator 
+                                            <div class="form-indicator
                                                 @if($player->form >= 7) bg-success
-                                                @elseif($player->form >= 5) bg-warning  
+                                                @elseif($player->form >= 5) bg-warning
                                                 @else bg-danger
                                                 @endif">
                                                 {{ number_format($player->form, 1) }}
@@ -301,7 +301,7 @@
                             AGGREGATES - Team Attacking Stats
                         </h4>
                         <p class="text-muted mb-3">SUM, AVG, COUNT functions for comprehensive analysis</p>
-                        
+
                         <div class="table-responsive">
                             <table class="table table-sm table-striped">
                                 <thead class="table-danger">
@@ -338,7 +338,7 @@
                             AGGREGATES - Team Defensive Stats
                         </h4>
                         <p class="text-muted mb-3">Complex aggregations with CASE statements</p>
-                        
+
                         <div class="table-responsive">
                             <table class="table table-sm table-striped">
                                 <thead class="table-success">
@@ -364,168 +364,6 @@
                                     @endforelse
                                 </tbody>
                             </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ADVANCED ANALYTICS -->
-            <div class="row">
-                <div class="col-lg-6">
-                    <div class="query-section">
-                        <h4 class="text-info mb-3">
-                            <i class="fas fa-star me-2"></i>
-                            Captain Recommendations
-                        </h4>
-                        <p class="text-muted mb-3">Multi-factor analysis using CTEs and complex scoring</p>
-                        
-                        @forelse($captain_recommendations ?? [] as $captain)
-                        <div class="card mb-2 @if($captain->recommendation_level == 'Premium') border-warning @elseif($captain->recommendation_level == 'Excellent') border-success @endif">
-                            <div class="card-body py-2">
-                                <div class="row align-items-center">
-                                    <div class="col-8">
-                                        <h6 class="mb-0">{{ $captain->web_name }}</h6>
-                                        <small class="text-muted">{{ $captain->team }} vs {{ $captain->opponent }} ({{ $captain->venue }})</small>
-                                    </div>
-                                    <div class="col-4 text-end">
-                                        <span class="badge 
-                                            @if($captain->recommendation_level == 'Premium') bg-warning
-                                            @elseif($captain->recommendation_level == 'Excellent') bg-success
-                                            @elseif($captain->recommendation_level == 'Good') bg-info
-                                            @else bg-secondary
-                                            @endif">
-                                            {{ $captain->recommendation_level }}
-                                        </span>
-                                        <div><small class="text-muted">Score: {{ $captain->captain_score }}</small></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        @empty
-                        <p class="text-center text-muted">No captain recommendations available</p>
-                        @endforelse
-                    </div>
-                </div>
-
-                <div class="col-lg-6">
-                    <div class="query-section">
-                        <h4 class="text-secondary mb-3">
-                            <i class="fas fa-gem me-2"></i>
-                            Differential Players
-                        </h4>
-                        <p class="text-muted mb-3">Low ownership gems with statistical analysis</p>
-                        
-                        @forelse($differential_players ?? [] as $player)
-                        <div class="card mb-2">
-                            <div class="card-body py-2">
-                                <div class="row align-items-center">
-                                    <div class="col-7">
-                                        <h6 class="mb-0">{{ $player->web_name }}</h6>
-                                        <small class="text-muted">{{ $player->team }} • {{ $player->position }}</small>
-                                    </div>
-                                    <div class="col-5 text-end">
-                                        <div><strong>{{ $player->ownership }}%</strong> <small class="text-muted">owned</small></div>
-                                        <div><small class="text-success">£{{ $player->cost }}m • {{ $player->points_per_million }} pts/£m</small></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        @empty
-                        <p class="text-center text-muted">No differential players found</p>
-                        @endforelse
-                    </div>
-                </div>
-            </div>
-
-            <!-- VIEWS AND TRANSFER RECOMMENDATIONS -->
-            <div class="row">
-                <div class="col-12">
-                    <div class="query-section">
-                        <h4 class="text-dark mb-3">
-                            <i class="fas fa-exchange-alt me-2"></i>
-                            VIEWS INTEGRATION - Transfer Recommendations
-                        </h4>
-                        <p class="text-muted mb-3">Data from database views combined with complex analysis</p>
-                        
-                        <div class="row">
-                            @forelse($transfer_recommendations ?? [] as $transfer)
-                            <div class="col-lg-6 mb-3">
-                                <div class="card 
-                                    @if(str_contains($transfer->recommendation, 'BUY')) border-success
-                                    @elseif(str_contains($transfer->recommendation, 'SELL')) border-danger
-                                    @endif">
-                                    <div class="card-body">
-                                        <div class="d-flex justify-content-between align-items-start">
-                                            <div>
-                                                <h6 class="mb-1">{{ $transfer->web_name }}</h6>
-                                                <small class="text-muted">{{ $transfer->team }} • {{ $transfer->position }}</small>
-                                            </div>
-                                            <span class="badge 
-                                                @if(str_contains($transfer->recommendation, 'BUY')) bg-success
-                                                @elseif(str_contains($transfer->recommendation, 'SELL')) bg-danger
-                                                @endif fs-6">
-                                                {{ explode(' - ', $transfer->recommendation)[0] }}
-                                            </span>
-                                        </div>
-                                        <hr class="my-2">
-                                        <div class="row text-center">
-                                            <div class="col-4">
-                                                <div class="small text-muted">Form</div>
-                                                <div>{{ $transfer->form }}</div>
-                                            </div>
-                                            <div class="col-4">
-                                                <div class="small text-muted">Cost</div>
-                                                <div>£{{ number_format($transfer->current_cost, 1) }}m</div>
-                                            </div>
-                                            <div class="col-4">
-                                                <div class="small text-muted">Owned</div>
-                                                <div>{{ number_format($transfer->ownership, 1) }}%</div>
-                                            </div>
-                                        </div>
-                                        <p class="small text-muted mt-2 mb-0">{{ explode(' - ', $transfer->recommendation)[1] ?? $transfer->recommendation }}</p>
-                                    </div>
-                                </div>
-                            </div>
-                            @empty
-                            <div class="col-12">
-                                <p class="text-center text-muted">No transfer recommendations at this time</p>
-                            </div>
-                            @endforelse
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- API Endpoints Information -->
-            <div class="row mt-4">
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-header bg-dark text-white">
-                            <h5 class="mb-0"><i class="fas fa-code me-2"></i>Available API Endpoints</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <h6 class="text-primary">Query Operations</h6>
-                                    <ul class="list-group list-group-flush">
-                                        <li class="list-group-item"><code>GET /fpl/joins</code> - Complex JOIN queries</li>
-                                        <li class="list-group-item"><code>GET /fpl/subqueries</code> - Subquery examples</li>
-                                        <li class="list-group-item"><code>GET /fpl/groupby</code> - GROUP BY with HAVING</li>
-                                        <li class="list-group-item"><code>GET /fpl/aggregates</code> - Aggregate functions</li>
-                                        <li class="list-group-item"><code>POST /fpl/crud</code> - CRUD operations demo</li>
-                                    </ul>
-                                </div>
-                                <div class="col-md-6">
-                                    <h6 class="text-success">Analysis Endpoints</h6>
-                                    <ul class="list-group list-group-flush">
-                                        <li class="list-group-item"><code>GET /fpl/captains/{gameweek}</code> - Captain analysis</li>
-                                        <li class="list-group-item"><code>GET /fpl/differentials</code> - Differential players</li>
-                                        <li class="list-group-item"><code>GET /fpl/clean-sheets/{gameweek}</code> - CS probabilities</li>
-                                        <li class="list-group-item"><code>GET /fpl/transfers</code> - Transfer recommendations</li>
-                                        <li class="list-group-item"><code>POST /fpl/views</code> - Create/manage views</li>
-                                    </ul>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
