@@ -52,6 +52,13 @@ class LeagueController extends Controller
      */
     public function store(Request $request)
     {
+        // Debug logging
+        \Log::info('League store request', [
+            'user_id' => auth()->id(),
+            'request_data' => $request->all(),
+            'session_id' => session()->getId()
+        ]);
+
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:100',
             'description' => 'nullable|string|max:500',
@@ -61,10 +68,17 @@ class LeagueController extends Controller
         ]);
 
         if ($validator->fails()) {
+            \Log::warning('League validation failed', ['errors' => $validator->errors()]);
             return back()->withErrors($validator)->withInput();
         }
 
         $user = Auth::user();
+        if (!$user) {
+            \Log::error('No authenticated user for league creation');
+            return back()->withErrors(['auth' => 'You must be logged in to create a league.'])->withInput();
+        }
+
+        \Log::info('Creating league for user', ['user_id' => $user->id]);
 
         // Create league
         $league = League::create([
@@ -79,6 +93,8 @@ class LeagueController extends Controller
             'is_active' => true
         ]);
 
+        \Log::info('League created', ['league_id' => $league->id]);
+
         // Add creator as first member and admin
         LeagueMember::create([
             'league_id' => $league->id,
@@ -86,6 +102,8 @@ class LeagueController extends Controller
             'joined_at' => now(),
             'is_admin' => true
         ]);
+
+        \Log::info('League member created', ['league_id' => $league->id, 'user_id' => $user->id]);
 
         return redirect()->route('leagues.show', $league)
             ->with('success', "League '{$league->name}' created successfully! League code: {$league->league_code}");

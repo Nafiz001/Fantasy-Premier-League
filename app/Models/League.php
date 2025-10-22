@@ -69,37 +69,16 @@ class League extends Model
      */
     public function getLeaderboard()
     {
-        $pointsService = app(\App\Services\FPLPointsService::class);
-        
-        // Get all finished gameweeks
-        $finishedGameweeks = \App\Models\Gameweek::where('finished', true)
-            ->orderBy('gameweek_id')
-            ->pluck('gameweek_id');
-
-        // Get all members
+        // Get all members with their stored total points
         $members = $this->members()
             ->withPivot('joined_at')
             ->get();
 
-        // Calculate total points and gameweeks played for each member
-        $leaderboardData = $members->map(function ($user) use ($pointsService, $finishedGameweeks) {
-            $totalPoints = 0;
-            $gameweeksPlayed = 0;
-
-            // Sum points across all finished gameweeks
-            foreach ($finishedGameweeks as $gameweekId) {
-                $squadPoints = $pointsService->getSquadPointsForGameweek($user->id, $gameweekId);
-                $gwPoints = $squadPoints['total_points'] ?? 0;
-                
-                if ($gwPoints > 0) {
-                    $totalPoints += $gwPoints;
-                    $gameweeksPlayed++;
-                }
-            }
-
+        // Use stored points from database (same as dashboard)
+        $leaderboardData = $members->map(function ($user) {
             // Add calculated fields to user object
-            $user->points = $totalPoints;
-            $user->gameweek = $gameweeksPlayed;
+            $user->points = $user->points ?? 0; // Use stored total points
+            $user->gameweek = $user->current_gameweek ?? 0; // Use stored gameweek count
             $user->league_joined_at = $user->pivot->joined_at;
 
             return $user;
@@ -145,7 +124,9 @@ class League extends Model
             return false;
         }
 
-        $this->members()->attach($userId, [
+        LeagueMember::create([
+            'league_id' => $this->id,
+            'user_id' => $userId,
             'joined_at' => now(),
             'is_admin' => false
         ]);

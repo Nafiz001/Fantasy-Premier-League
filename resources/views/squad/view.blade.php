@@ -290,27 +290,7 @@
                         </div>
                     @endforeach
                 </div>
-            </div>
-
-                    @foreach($benchPlayers as $index => $benchPlayer)
-                        <div class="text-center">
-                            <div class="text-sm font-medium text-gray-600 mb-2">
-                                {{ $benchPlayer['label'] }}
-                            </div>
-                            <div class="player-card-bench">
-                                <div class="w-14 h-14 bg-white rounded-lg shadow-lg flex items-center justify-center mb-2 mx-auto">
-                                    <img src="{{ $benchPlayer['player']->jersey_url }}"
-                                         alt="Jersey"
-                                         class="w-10 h-10 rounded">
-                                </div>
-                                <div class="bg-white rounded px-2 py-1 text-center shadow-lg">
-                                    <div class="text-xs font-semibold text-gray-900">{{ $benchPlayer['player']->web_name }}</div>
-                                    <div class="text-xs text-gray-600">{{ $benchPlayer['player']->team_short }} (H)</div>
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
+            
             </div>
 
             <!-- Action Buttons -->

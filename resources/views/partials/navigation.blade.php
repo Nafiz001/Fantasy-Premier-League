@@ -4,7 +4,7 @@
         <div class="flex items-center justify-between h-16">
             <div class="flex items-center space-x-3">
                 <img src="/logo.png" alt="Fantasy Premier League Logo" class="w-10 h-10 rounded-full">
-                <span class="text-lg font-bold text-fpl-purple">Fantasy</span>
+                <span class="text-lg font-bold text-fpl-purple">Fantasy League</span>
             </div>
 
             <!-- Navigation Menu -->

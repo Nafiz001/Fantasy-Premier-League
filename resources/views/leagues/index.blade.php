@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>My Leagues - Fantasy Premier League</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -56,6 +57,49 @@
     </header>
 
     <div class="max-w-7xl mx-auto px-4 py-8">
+        <!-- Error Messages -->
+        @if ($errors->any())
+            <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-red-800">
+                            There were some errors:
+                        </h3>
+                        <div class="mt-2 text-sm text-red-700">
+                            <ul role="list" class="list-disc pl-5 space-y-1">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        <!-- Success Messages -->
+        @if (session('success'))
+            <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-green-800">
+                            {{ session('success') }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        @endif
+
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <!-- My Leagues -->
             <div class="lg:col-span-2">
@@ -141,10 +185,10 @@
                                                 {{ $league->current_entries }}/{{ $league->max_entries }} members
                                             </div>
                                         </div>
-                                        <form action="{{ route('leagues.join-code') }}" method="POST" class="inline">
+                                        <form action="{{ route('leagues.join-code') }}" method="POST" class="inline league-join-form">
                                             @csrf
                                             <input type="hidden" name="league_code" value="{{ $league->league_code }}">
-                                            <button type="submit" class="text-xs bg-fpl-green text-fpl-purple px-3 py-1 rounded font-semibold hover:bg-opacity-90">
+                                            <button type="button" class="text-xs bg-fpl-green text-fpl-purple px-3 py-1 rounded font-semibold hover:bg-opacity-90 join-league-btn">
                                                 Join
                                             </button>
                                         </form>
@@ -158,7 +202,7 @@
                 <!-- Quick Join -->
                 <div class="bg-white/95 backdrop-blur-sm rounded-lg p-6 mt-6">
                     <h3 class="text-lg font-bold text-gray-900 mb-4">Quick Join</h3>
-                    <form action="{{ route('leagues.join-code') }}" method="POST">
+                    <form action="{{ route('leagues.join-code') }}" method="POST" id="quick-join-form">
                         @csrf
                         <div class="mb-4">
                             <label for="league_code" class="block text-sm font-medium text-gray-700 mb-2">League Code</label>
@@ -170,7 +214,12 @@
                                    placeholder="ABC123"
                                    style="text-transform: uppercase;">
                         </div>
-                        <button type="submit" class="w-full bg-fpl-purple text-white py-2 rounded-lg font-semibold hover:bg-opacity-90">
+
+                        <div id="quick-join-errors" class="hidden mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                            <p id="quick-join-error-text" class="text-red-600 text-sm"></p>
+                        </div>
+
+                        <button type="button" id="quick-join-btn" class="w-full bg-fpl-purple text-white py-2 rounded-lg font-semibold hover:bg-opacity-90">
                             Join League
                         </button>
                     </form>
@@ -184,6 +233,207 @@
     // Auto-uppercase league code input
     document.getElementById('league_code').addEventListener('input', function(e) {
         e.target.value = e.target.value.toUpperCase();
+    });
+
+    // League join functionality with proper event handling
+    function joinLeague(event, leagueCode = null) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+
+        // Helper function to show errors
+        function showQuickJoinError(message) {
+            const errorDiv = document.getElementById('quick-join-errors');
+            const errorText = document.getElementById('quick-join-error-text');
+            errorText.textContent = message;
+            errorDiv.classList.remove('hidden');
+        }
+
+        // Helper function to hide errors
+        function hideQuickJoinError() {
+            const errorDiv = document.getElementById('quick-join-errors');
+            errorDiv.classList.add('hidden');
+        }
+
+        // Hide any previous errors
+        hideQuickJoinError();
+
+        // Get league code from parameter or form input
+        let code = leagueCode;
+        if (!code) {
+            code = document.getElementById('league_code').value.trim().toUpperCase();
+            if (!code) {
+                showQuickJoinError('Please enter a league code.');
+                document.getElementById('league_code').focus();
+                return;
+            }
+        }
+
+        if (code.length !== 6) {
+            showQuickJoinError('League code must be 6 characters.');
+            document.getElementById('league_code').focus();
+            return;
+        }
+
+        // Get CSRF token
+        const csrfToken = document.querySelector('meta[name="csrf-token"]');
+        if (!csrfToken) {
+            showQuickJoinError('CSRF token not found. Please refresh the page.');
+            return;
+        }
+
+        // Show loading state
+        const submitBtn = leagueCode ?
+            event.target :
+            document.getElementById('quick-join-btn');
+        const originalText = submitBtn.textContent;
+        submitBtn.textContent = 'Joining...';
+        submitBtn.disabled = true;
+
+        // Prepare form data
+        const formData = new FormData();
+        formData.set('_token', csrfToken.getAttribute('content'));
+        formData.set('league_code', code);
+
+        // Submit via fetch
+        console.log('Submitting quick join request...');
+        fetch('{{ route("leagues.join-code") }}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRF-TOKEN': csrfToken.getAttribute('content'),
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+            },
+            credentials: 'same-origin',
+            redirect: 'follow'
+        })
+        .then(response => {
+            console.log('Quick join response received:', response.status);
+
+            // Check for session expiry
+            if (response.status === 401 || response.status === 419) {
+                alert('Your session has expired. Please log in again.');
+                window.location.href = '{{ route("login") }}';
+                return;
+            }
+
+            return response.text();
+        })
+        .then(html => {
+            if (html) {
+                console.log('Response HTML length:', html.length);
+
+                // Check if we got redirected to login page
+                if (html.includes('login') || html.includes('welcome') || html.includes('Please log in')) {
+                    alert('Your session has expired. Please log in again.');
+                    window.location.href = '{{ route("login") }}';
+                    return;
+                }
+
+                // Check for validation errors
+                if (html.includes('League not found') || html.includes('league not found')) {
+                    console.log('Detected league not found error');
+                    showQuickJoinError('League not found. Please check the code and try again.');
+                    submitBtn.textContent = originalText;
+                    submitBtn.disabled = false;
+                    return;
+                }
+
+                if (html.includes('already a member')) {
+                    console.log('Detected already member error');
+                    showQuickJoinError('You are already a member of this league.');
+                    submitBtn.textContent = originalText;
+                    submitBtn.disabled = false;
+                    return;
+                }
+
+                if (html.includes('league is full')) {
+                    console.log('Detected league full error');
+                    showQuickJoinError('This league is full and cannot accept new members.');
+                    submitBtn.textContent = originalText;
+                    submitBtn.disabled = false;
+                    return;
+                }
+
+                if (html.includes('validation')) {
+                    console.log('Detected validation error');
+                    showQuickJoinError('Invalid league code. Please check and try again.');
+                    submitBtn.textContent = originalText;
+                    submitBtn.disabled = false;
+                    return;
+                }
+
+                // Check for specific error messages
+                if ((html.includes('error') || html.includes('Error')) && !html.includes('console.error')) {
+                    console.log('Detected error message');
+                    showQuickJoinError('Failed to join league. Please try again.');
+                    submitBtn.textContent = originalText;
+                    submitBtn.disabled = false;
+                    return;
+                }
+
+                // Check if we got redirected to the league show page (success)
+                if (html.includes('League code') && html.includes('members')) {
+                    console.log('Detected league show page - join success!');
+                    alert('Successfully joined the league!');
+                    window.location.href = '{{ route("leagues.show", ":id") }}'.replace(':id', 'current'); // Will be handled by backend
+                    return;
+                }
+
+                // Check for success indicators
+                if (html.includes('Successfully joined') || html.includes('joined successfully')) {
+                    console.log('Detected success message');
+                    alert('Successfully joined the league!');
+                    window.location.href = '{{ route("leagues.index") }}';
+                    return;
+                }
+
+                // If we can't determine the result, assume success
+                console.log('No specific indicators found, assuming success');
+                alert('Successfully joined the league!');
+                window.location.href = '{{ route("leagues.index") }}';
+            }
+        })
+        .catch(error => {
+            console.error('Quick join error:', error);
+            showQuickJoinError('An error occurred while joining the league. Please try again.');
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+        })
+        .finally(() => {
+            // Reset button state
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+        });
+    }
+
+    // Event listeners for league join buttons
+    document.addEventListener('DOMContentLoaded', function() {
+        // Individual league join buttons
+        document.querySelectorAll('.join-league-btn').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                // Get league code from the form
+                const form = this.closest('.league-join-form');
+                const leagueCodeInput = form.querySelector('input[name="league_code"]');
+                const leagueCode = leagueCodeInput ? leagueCodeInput.value : null;
+
+                joinLeague(e, leagueCode);
+            });
+        });
+
+        // Quick join button
+        const quickJoinBtn = document.getElementById('quick-join-btn');
+        if (quickJoinBtn) {
+            quickJoinBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                joinLeague(e);
+            });
+        }
     });
     </script>
 </body>

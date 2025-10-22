@@ -44,17 +44,10 @@
     <div class="max-w-4xl mx-auto px-4 py-6">
         <!-- Page Header -->
         <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
-            <h1 class="text-2xl font-bold text-gray-900 mb-2">Fixtures & Results</h1>
+            <h1 class="text-2xl font-bold text-gray-900 mb-2">Fixtures </h1>
 
             <!-- Filter Tabs -->
-            <div class="flex space-x-4 border-b">
-                <button class="px-4 py-2 text-fpl-purple border-b-2 border-fpl-purple font-semibold">
-                    Fixtures
-                </button>
-                <button class="px-4 py-2 text-gray-500 hover:text-fpl-purple">
-                    FDR
-                </button>
-            </div>
+
         </div>
 
         <!-- Gameweek Header -->
@@ -99,16 +92,15 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                         </svg>
                     </a>
-                @else
+                    @else
                     <div class="p-2 rounded-full opacity-50">
                         <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                         </svg>
                     </div>
+
                 @endif
-                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                    </svg>
+
                 </button>
             </div>
         </div>
@@ -205,7 +197,7 @@
                 </div>
                 <h3 class="text-lg font-semibold text-gray-900 mb-2">No fixtures available</h3>
                 <p class="text-gray-600 mb-4">Fixtures for this gameweek will be available soon.</p>
-                <button class="bg-fpl-purple text-white px-4 py-2 rounded hover:bg-purple-800 transition-colors"
+                <button type="button" class="bg-fpl-purple text-white px-4 py-2 rounded hover:bg-purple-800 transition-colors"
                         onclick="importFixtures()">
                     Import Fixtures
                 </button>
@@ -214,12 +206,36 @@
     </div>
 
     <script>
-        function importFixtures() {
+        // ================== GLOBAL CSRF INTERCEPTOR ==================
+        // Intercept all fetch requests to add CSRF token automatically
+        const originalFetch = window.fetch;
+        window.fetch = function(...args) {
+            const [resource, config] = args;
+
+            if (config && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(config.method?.toUpperCase())) {
+                const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                if (token) {
+                    if (!config.headers) config.headers = {};
+                    config.headers['X-CSRF-TOKEN'] = token;
+                }
+            }
+
+            return originalFetch.apply(this, args);
+        };
+
+        function importFixtures(e) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
             // Show loading state
-            const button = event.target;
-            const originalText = button.textContent;
-            button.textContent = 'Importing...';
-            button.disabled = true;
+            const button = event?.target || document.querySelector('button[onclick="importFixtures()"]');
+            const originalText = button?.textContent || 'Import Fixtures';
+            if (button) {
+                button.textContent = 'Importing...';
+                button.disabled = true;
+            }
 
             // Make request to import fixtures
             fetch('{{ route("fixtures.import") }}', {
@@ -229,10 +245,22 @@
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
                 }
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    if (response.status === 401 || response.status === 419) {
+                        alert('Your session has expired. Please log in again.');
+                        window.location.href = '{{ route("login") }}';
+                        return;
+                    }
+                }
+                return response.json();
+            })
             .then(data => {
+                if (!data) return; // Handle empty response
+
                 if (data.success) {
                     alert(data.message);
+                    // Stay on the same page - do NOT redirect
                     // Optionally reload the page to show imported fixtures
                     // window.location.reload();
                 } else {
@@ -241,11 +269,13 @@
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('An error occurred while importing fixtures.');
+                alert('An error occurred while importing fixtures: ' + error.message);
             })
             .finally(() => {
-                button.textContent = originalText;
-                button.disabled = false;
+                if (button) {
+                    button.textContent = originalText;
+                    button.disabled = false;
+                }
             });
         }
     </script>

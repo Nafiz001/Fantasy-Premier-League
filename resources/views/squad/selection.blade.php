@@ -378,6 +378,23 @@
     </div>
 
     <script>
+        // ================== GLOBAL CSRF INTERCEPTOR ==================
+        // Intercept all fetch requests to add CSRF token automatically
+        const originalFetch = window.fetch;
+        window.fetch = function(...args) {
+            const [resource, config] = args;
+
+            if (config && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(config.method?.toUpperCase())) {
+                const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                if (token) {
+                    if (!config.headers) config.headers = {};
+                    config.headers['X-CSRF-TOKEN'] = token;
+                }
+            }
+
+            return originalFetch.apply(this, args);
+        };
+
         // Squad selection data
         let selectedSquad = {
             Goalkeeper: [],

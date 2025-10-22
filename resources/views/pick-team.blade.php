@@ -189,28 +189,7 @@
                         </div>
                     </div>
 
-                    <!-- Chips Section -->
-                    <div class="bg-white/95 backdrop-blur-sm rounded-lg p-6">
-                        <h3 class="font-semibold text-gray-900 mb-4">Chips</h3>
-                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                            <button class="chip-btn p-4 border-2 border-gray-300 rounded-lg text-center hover:border-fpl-green transition-colors" data-chip="wildcard">
-                                <div class="text-3xl mb-2">🃏</div>
-                                <div class="text-sm font-medium">Wildcard</div>
-                            </button>
-                            <button class="chip-btn p-4 border-2 border-gray-300 rounded-lg text-center hover:border-fpl-green transition-colors" data-chip="freehit">
-                                <div class="text-3xl mb-2">🎯</div>
-                                <div class="text-sm font-medium">Free Hit</div>
-                            </button>
-                            <button class="chip-btn p-4 border-2 border-gray-300 rounded-lg text-center hover:border-fpl-green transition-colors" data-chip="bench-boost">
-                                <div class="text-3xl mb-2">⚡</div>
-                                <div class="text-sm font-medium">Bench Boost</div>
-                            </button>
-                            <button class="chip-btn p-4 border-2 border-gray-300 rounded-lg text-center hover:border-fpl-green transition-colors" data-chip="triple-captain">
-                                <div class="text-3xl mb-2">👑</div>
-                                <div class="text-sm font-medium">Triple Captain</div>
-                            </button>
-                        </div>
-                    </div>
+                    
                 </div>
 
                 <!-- Team Info Sidebar (1 column) -->
@@ -235,7 +214,7 @@
                     </div>
 
                     <!-- Save Button -->
-                    <button id="save-team" class="w-full py-4 bg-gray-400 text-white rounded-lg cursor-not-allowed font-bold text-lg shadow-lg" disabled>
+                    <button type="button" id="save-team" class="w-full py-4 bg-gray-400 text-white rounded-lg cursor-not-allowed font-bold text-lg shadow-lg" disabled>
                         Save Team
                     </button>
 
@@ -274,6 +253,23 @@
     </select>
 
     <script>
+        // ================== GLOBAL CSRF INTERCEPTOR ==================
+        // Intercept all fetch requests to add CSRF token automatically
+        const originalFetch = window.fetch;
+        window.fetch = function(...args) {
+            const [resource, config] = args;
+
+            if (config && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(config.method?.toUpperCase())) {
+                const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                if (token) {
+                    if (!config.headers) config.headers = {};
+                    config.headers['X-CSRF-TOKEN'] = token;
+                }
+            }
+
+            return originalFetch.apply(this, args);
+        };
+
         // ================== STATE MANAGEMENT ==================
         const squad = @json($squad);
         const teamData = @json($teamData);
@@ -524,7 +520,7 @@
                         <img src="${player.jersey_url}" alt="${player.web_name}" class="w-10 h-10 rounded">
                     </div>
                     <div class="text-xs font-semibold text-gray-900 truncate">${player.web_name}</div>
-                    <div class="text-xs text-gray-500">${player.position.slice(0, 3).toUpperCase()}</div>
+                    <div class="text-xs text-gray-500">${player.position.slice(0, 3).toUpperCase() === 'GOA' ? 'GKP' : player.position.slice(0, 3).toUpperCase()}</div>
                 </div>
             `).join('');
 
@@ -683,7 +679,13 @@
             render();
         }
 
-        function saveTeam() {
+        function saveTeam(event) {
+            // Prevent any default button behavior
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+
             if (startingXI.length !== 11) {
                 alert(`Please select exactly 11 players. You have ${startingXI.length} selected.`);
                 return;
@@ -730,29 +732,48 @@
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                 },
                 body: JSON.stringify(data)
             })
-            .then(response => response.json())
+            .then(response => {
+                // Check if response is OK
+                if (!response.ok) {
+                    console.error('Response status:', response.status);
+                    if (response.status === 401 || response.status === 419) {
+                        alert('Your session has expired. Please log in again.');
+                        window.location.href = '{{ route("login") }}';
+                        return;
+                    }
+                }
+                return response.json();
+            })
             .then(data => {
+                if (!data) return; // Handle empty response
+
                 if (data.success) {
                     alert('Team saved successfully!');
                     initialState = getCurrentState();
                     updateSaveButton();
+                    // Stay on the same page - do NOT redirect
                 } else {
                     alert('Error saving team: ' + (data.message || 'Unknown error'));
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Error saving team');
+                alert('Error saving team: ' + error.message);
             });
         }
 
         // ================== EVENT LISTENERS ==================
         function attachEventListeners() {
             // Save button
-            document.getElementById('save-team').addEventListener('click', saveTeam);
+            document.getElementById('save-team').addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                saveTeam(e);
+            });
 
             // Chip buttons
             document.querySelectorAll('.chip-btn').forEach(btn => {

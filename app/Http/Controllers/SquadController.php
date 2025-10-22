@@ -740,6 +740,7 @@ class SquadController extends Controller
                 'formation' => $request->formation,
                 'active_chip' => $request->chip,
                 'squad_completed' => true,
+                'has_selected_squad' => true, // IMPORTANT: Set this for middleware check
             ]);
 
             return response()->json([
@@ -813,6 +814,10 @@ class SquadController extends Controller
         $transfersIn = $request->input('transfers_in', []);
         $transferCount = count($transfersOut);
 
+        // Convert database IDs to FPL IDs for consistency with squad storage
+        $outPlayersFpl = DB::table('players')->whereIn('id', $transfersOut)->pluck('fpl_id')->toArray();
+        $inPlayersFpl = DB::table('players')->whereIn('id', $transfersIn)->pluck('fpl_id')->toArray();
+
         // Validate transfers
         if ($transferCount === 0) {
             return response()->json([
@@ -866,27 +871,123 @@ class SquadController extends Controller
         }
 
         // Validate squad composition after transfers
-        $currentSquad = $user->starting_xi ?? [];
+        $currentSquad = $user->selected_squad ?? [];
         if (is_string($currentSquad)) {
             $currentSquad = json_decode($currentSquad, true) ?? [];
         }
+        
+        // If selected_squad is empty, fall back to starting_xi plus bench logic
+        if (empty($currentSquad)) {
+            // Get the user's full squad using the helper method
+            $squadData = $this->getUserFullSquad($user);
+            if (!empty($squadData['fullSquad'])) {
+                $currentSquad = $squadData['fullSquad'];
+                // Update the user's selected_squad field for future transfers
+                $user->selected_squad = $currentSquad;
+                $user->save();
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unable to determine current squad. Please visit your team page first.'
+                ]);
+            }
+        }
+        
+        // Debug: Check current squad composition before transfers
+        if (count($currentSquad) !== 15) {
+            return response()->json([
+                'success' => false,
+                'message' => "Current squad has " . count($currentSquad) . " players, expected 15. Please contact support."
+            ]);
+        }
+        
+        // Additional debug: Check current composition
+        $debugPlayers = DB::table('players')->whereIn('fpl_id', $currentSquad)->get()->groupBy('position');
+        $debugGk = $debugPlayers->get('Goalkeeper', collect())->count();
+        $debugDef = $debugPlayers->get('Defender', collect())->count();
+        $debugMid = $debugPlayers->get('Midfielder', collect())->count();
+        $debugFwd = $debugPlayers->get('Forward', collect())->count();
+        
+        if ($debugGk !== 2 || $debugDef !== 5 || $debugMid !== 5 || $debugFwd !== 3) {
+            return response()->json([
+                'success' => false,
+                'message' => "Current squad is invalid before transfers: {$debugGk} GK, {$debugDef} DEF, {$debugMid} MID, {$debugFwd} FWD. Please reset your team."
+            ]);
+        }
 
-        // Remove transferred out players and add transferred in players
-        $newSquad = array_diff($currentSquad, $transfersOut);
-        $newSquad = array_merge($newSquad, $transfersIn);
+        // Create a proper transfer mapping to ensure 1-to-1 replacement
+        $newSquad = $currentSquad;
+        for ($i = 0; $i < count($outPlayersFpl); $i++) {
+            $outPlayerId = $outPlayersFpl[$i];
+            $inPlayerId = $inPlayersFpl[$i];
+            
+            // Find the index of the player being transferred out
+            $outIndex = array_search($outPlayerId, $newSquad);
+            if ($outIndex !== false) {
+                // Replace the player at that exact position
+                $newSquad[$outIndex] = $inPlayerId;
+            } else {
+                // If player not found in squad (shouldn't happen), add new player
+                $newSquad[] = $inPlayerId;
+            }
+        }
+        
+        // Ensure we still have exactly the right number of players
+        $newSquad = array_values(array_unique($newSquad));
 
         // Check squad composition
         if (!$this->validateSquadComposition(array_values($newSquad))) {
+            // Get composition details for debugging
+            $players = DB::table('players')->whereIn('fpl_id', array_values($newSquad))->get()->groupBy('position');
+            $gk = $players->get('Goalkeeper', collect())->count();
+            $def = $players->get('Defender', collect())->count();
+            $mid = $players->get('Midfielder', collect())->count();
+            $fwd = $players->get('Forward', collect())->count();
+            
             return response()->json([
                 'success' => false,
-                'message' => 'Invalid squad composition after transfers.'
+                'message' => "Invalid squad composition after transfers. Current: {$gk} GK, {$def} DEF, {$mid} MID, {$fwd} FWD (Need: 2 GK, 5 DEF, 5 MID, 3 FWD)"
             ]);
+        }
+
+        // Also update starting XI if transferred players were in it
+        $currentStartingXI = $user->starting_xi ?? [];
+        if (is_string($currentStartingXI)) {
+            $currentStartingXI = json_decode($currentStartingXI, true) ?? [];
+        }
+        
+        // Update starting XI with the same 1-to-1 replacement logic
+        $newStartingXI = $currentStartingXI;
+        for ($i = 0; $i < count($outPlayersFpl); $i++) {
+            $outPlayerId = $outPlayersFpl[$i];
+            $inPlayerId = $inPlayersFpl[$i];
+            
+            // Find the index of the player being transferred out in starting XI
+            $outIndex = array_search($outPlayerId, $newStartingXI);
+            if ($outIndex !== false) {
+                // Replace the player at that exact position in starting XI
+                $newStartingXI[$outIndex] = $inPlayerId;
+            }
+            // If the transferred out player wasn't in starting XI, no change needed
+        }
+        
+        // Ensure starting XI has exactly 11 players and all are in the new squad
+        $newStartingXI = array_values(array_intersect($newStartingXI, $newSquad));
+        if (count($newStartingXI) < 11) {
+            // Fill remaining spots from the squad (bench players)
+            $bench = array_diff($newSquad, $newStartingXI);
+            $needed = 11 - count($newStartingXI);
+            $newStartingXI = array_merge($newStartingXI, array_slice($bench, 0, $needed));
+        } else if (count($newStartingXI) > 11) {
+            // Keep only first 11
+            $newStartingXI = array_slice($newStartingXI, 0, 11);
         }
 
         try {
             // Apply transfers
             $user->update([
-                'starting_xi' => array_values($newSquad),
+                'selected_squad' => array_values($newSquad), // Update full 15-player squad
+                'starting_xi' => array_values($newStartingXI), // Update starting XI
                 'budget_remaining' => $newBudget,
                 'free_transfers' => max(0, $freeTransfers - $transferCount),
                 'points' => ($user->points ?? 0) - $pointPenalty
@@ -929,7 +1030,7 @@ class SquadController extends Controller
             return false;
         }
 
-        $players = DB::table('players')->whereIn('id', $playerIds)->get()->groupBy('position');
+        $players = DB::table('players')->whereIn('fpl_id', $playerIds)->get()->groupBy('position');
 
         $gk = $players->get('Goalkeeper', collect())->count();
         $def = $players->get('Defender', collect())->count();

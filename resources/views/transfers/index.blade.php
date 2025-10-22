@@ -424,10 +424,10 @@
 
                 <!-- Action Buttons -->
                 <div class="flex justify-center space-x-4">
-                    <button id="reset-transfers" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-semibold">
+                    <button type="button" id="reset-transfers" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-semibold">
                         Reset
                     </button>
-                    <button id="make-transfers" class="bg-fpl-purple hover:bg-purple-800 text-white px-6 py-3 rounded-lg font-semibold">
+                    <button type="button" id="make-transfers" class="bg-fpl-purple hover:bg-purple-800 text-white px-6 py-3 rounded-lg font-semibold">
                         Make Transfers
                     </button>
                 </div>
@@ -473,6 +473,23 @@
     </div>
 
     <script>
+        // ================== GLOBAL CSRF INTERCEPTOR ==================
+        // Intercept all fetch requests to add CSRF token automatically
+        const originalFetch = window.fetch;
+        window.fetch = function(...args) {
+            const [resource, config] = args;
+
+            if (config && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(config.method?.toUpperCase())) {
+                const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                if (token) {
+                    if (!config.headers) config.headers = {};
+                    config.headers['X-CSRF-TOKEN'] = token;
+                }
+            }
+
+            return originalFetch.apply(this, args);
+        };
+
         const transfersOut = [];
         const transfersIn = [];
         const freeTransfers = {{ $transferData['free_transfers'] }};
@@ -640,7 +657,10 @@
         });
 
         // Reset transfers
-        document.getElementById('reset-transfers').addEventListener('click', function() {
+        document.getElementById('reset-transfers').addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
             if (confirm('Are you sure you want to reset all transfers?')) {
                 transfersOut.length = 0;
                 transfersIn.length = 0;
@@ -665,7 +685,10 @@
         });
 
         // Make transfers
-        document.getElementById('make-transfers').addEventListener('click', function() {
+        document.getElementById('make-transfers').addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
             if (transfersOut.length !== transfersIn.length) {
                 alert('Please complete all transfers before confirming.');
                 return;
@@ -712,10 +735,22 @@
                     },
                     body: JSON.stringify(transferData)
                 })
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        if (response.status === 401 || response.status === 419) {
+                            alert('Your session has expired. Please log in again.');
+                            window.location.href = '{{ route("login") }}';
+                            return;
+                        }
+                    }
+                    return response.json();
+                })
                 .then(data => {
+                    if (!data) return; // Handle empty response
+
                     if (data.success) {
                         alert('Transfers completed successfully!\n\n' + data.message);
+                        // Stay on the same page - do NOT redirect
                         window.location.reload();
                     } else {
                         alert('Transfer failed: ' + data.message);
@@ -723,7 +758,7 @@
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('An error occurred while processing transfers.');
+                    alert('An error occurred while processing transfers: ' + error.message);
                 })
                 .finally(() => {
                     this.disabled = false;

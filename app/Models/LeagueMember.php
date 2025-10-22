@@ -11,18 +11,12 @@ class LeagueMember extends Model
         'league_id',
         'user_id',
         'joined_at',
-        'is_admin',
-        'rank',
-        'total_points',
-        'gameweeks_played'
+        'is_admin'
     ];
 
     protected $casts = [
         'joined_at' => 'datetime',
-        'is_admin' => 'boolean',
-        'rank' => 'integer',
-        'total_points' => 'integer',
-        'gameweeks_played' => 'integer'
+        'is_admin' => 'boolean'
     ];
 
     /**
