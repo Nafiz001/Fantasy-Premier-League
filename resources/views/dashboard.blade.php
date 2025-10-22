@@ -125,29 +125,29 @@
                             <!-- Mini player positions (using full height) -->
                             <!-- GK (TOP - 8% from top) -->
                             <div class="absolute top-4 left-1/2 transform -translate-x-1/2">
-                                <div class="w-4 h-4 bg-blue-500 rounded-full"></div>
+                                <div class="w-3 h-3 bg-blue-600 rounded-full border border-white/50"></div>
                             </div>
 
                             <!-- Defenders (25% from top) - Full width -->
-                            <div class="absolute top-12 left-0 right-0 flex justify-between px-8">
-                                <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                                <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                                <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                                <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                            <div class="absolute top-12 left-0 right-0 flex justify-between px-6">
+                                <div class="w-3 h-3 bg-yellow-500 rounded-full border border-white/50"></div>
+                                <div class="w-3 h-3 bg-yellow-500 rounded-full border border-white/50"></div>
+                                <div class="w-3 h-3 bg-yellow-500 rounded-full border border-white/50"></div>
+                                <div class="w-3 h-3 bg-yellow-500 rounded-full border border-white/50"></div>
                             </div>
 
                             <!-- Midfielders (55% from top) - Full width -->
-                            <div class="absolute top-26 left-0 right-0 flex justify-between px-8">
-                                <div class="w-3 h-3 bg-green-500 rounded-full"></div>
-                                <div class="w-3 h-3 bg-green-500 rounded-full"></div>
-                                <div class="w-3 h-3 bg-green-500 rounded-full"></div>
-                                <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                            <div class="absolute top-24 left-0 right-0 flex justify-between px-6">
+                                <div class="w-3 h-3 bg-teal-500 rounded-full border border-white/50"></div>
+                                <div class="w-3 h-3 bg-teal-500 rounded-full border border-white/50"></div>
+                                <div class="w-3 h-3 bg-teal-500 rounded-full border border-white/50"></div>
+                                <div class="w-3 h-3 bg-teal-500 rounded-full border border-white/50"></div>
                             </div>
 
                             <!-- Forwards (80% from top) - Spread apart -->
-                            <div class="absolute top-38 left-0 right-0 flex justify-center space-x-12 px-8">
-                                <div class="w-3 h-3 bg-red-500 rounded-full"></div>
-                                <div class="w-3 h-3 bg-red-500 rounded-full"></div>
+                            <div class="absolute top-36 left-0 right-0 flex justify-center space-x-8 px-6">
+                                <div class="w-3 h-3 bg-red-500 rounded-full border border-white/50"></div>
+                                <div class="w-3 h-3 bg-red-500 rounded-full border border-white/50"></div>
                             </div>
 
                             <!-- Formation text -->
