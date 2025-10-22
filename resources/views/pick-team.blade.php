@@ -189,7 +189,7 @@
                         </div>
                     </div>
 
-                    
+
                 </div>
 
                 <!-- Team Info Sidebar (1 column) -->
